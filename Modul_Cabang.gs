@@ -18,6 +18,7 @@
  *   - Migrasi_Skema.gs     : ensureMigrated_
  *   - Modul_BiayaGas.gs        : deleteBiayaGasByCabang_ (dipanggil saat hapus cabang)
  *   - Modul_BiayaListrik.gs    : deleteBiayaListrikByCabang_ (dipanggil saat hapus cabang)
+ *   - Modul_BiayaAir.gs        : deleteBiayaAirByCabang_ (dipanggil saat hapus cabang)
  *
  * DIPANGGIL OLEH FILE LAIN:
  *   - defaultCabang_, sanitizeCabang_, toMachineArray_, computeSummary_
@@ -211,12 +212,13 @@ function updateCabang(id, payload) {
  * dianggap sukses (bukan error), karena hasil akhirnya sama: cabang itu tidak ada.
  *
  * Catatan: turut menghapus SEMUA record Master Biaya milik cabang ini
- * (saat ini: biaya gas dan konfigurasi listrik), supaya tidak ada record
+ * (saat ini: biaya gas, listrik, dan air), supaya tidak ada record
  * biaya "hantu" yang cabangId-nya sudah tidak ada.
- * Lihat deleteBiayaGasByCabang_ (Modul_BiayaGas.gs) dan
- * deleteBiayaListrikByCabang_ (Modul_BiayaListrik.gs).
+ * Lihat deleteBiayaGasByCabang_ (Modul_BiayaGas.gs),
+ * deleteBiayaListrikByCabang_ (Modul_BiayaListrik.gs), dan
+ * deleteBiayaAirByCabang_ (Modul_BiayaAir.gs).
  *
- * PENTING kalau menambah kategori biaya baru (Air, Deterjen, dst): tambahkan
+ * PENTING kalau menambah kategori biaya baru (Deterjen, dst): tambahkan
  * juga pemanggilan deleteBiayaXxxByCabang_ di sini, atau data biaya kategori
  * itu akan "nyangkut" tanpa cabang pemilik saat cabang dihapus.
  */
@@ -231,6 +233,7 @@ function deleteCabang(id) {
     removeFromOrder_(sheet, KEY_CABANG_ORDER, id);
     deleteBiayaGasByCabang_(sheet, id);
     deleteBiayaListrikByCabang_(sheet, id);
+    deleteBiayaAirByCabang_(sheet, id);
     return { ok: true, data: { id: id } };
   } catch (err) {
     return errorResponse_(err, "deleteCabang");

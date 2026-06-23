@@ -1091,7 +1091,7 @@
       <div class="pill-group" id="kategoriBiayaPills" style="margin-bottom: 18px;">
         <div class="pill active flame" data-val="gas" onclick="selectKategoriBiaya('gas')">Gas</div>
         <div class="pill volt" data-val="listrik" onclick="selectKategoriBiaya('listrik')">Listrik</div>
-        <div class="pill disabled" title="Segera hadir">Air</div>
+        <div class="pill sage" data-val="air" onclick="selectKategoriBiaya('air')">Air</div>
         <div class="pill disabled" title="Segera hadir">Deterjen</div>
       </div>
 
@@ -1247,6 +1247,37 @@
       </div>
     </section>
 
+    <!-- ===================================================================
+         LAYAR: ANALISA BIAYA AIR (satu konfigurasi per cabang)
+    =================================================================== -->
+    <section class="screen" id="screenAirForm">
+      <div class="list-header">
+        <h1 id="airTitle">Analisa Biaya Air</h1>
+      </div>
+
+      <div class="air-sumber-panel">
+        <label>Sumber Air</label>
+        <div class="air-sumber-buttons" style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px;">
+          <button type="button" class="air-sumber-btn" data-sumber="pdam" onclick="selectAirSumber('pdam')" style="padding: 12px; border: 2px solid var(--sage); background: transparent; color: var(--sage); border-radius: var(--radius); cursor: pointer; font-size: 14px; font-weight: 500;">Air PDAM / Meteran</button>
+          <button type="button" class="air-sumber-btn" data-sumber="tangki" onclick="selectAirSumber('tangki')" style="padding: 12px; border: 2px solid var(--border); background: transparent; color: var(--text); border-radius: var(--radius); cursor: pointer; font-size: 14px; font-weight: 500;">Air Tangki / Toren</button>
+          <button type="button" class="air-sumber-btn" data-sumber="sumur" onclick="selectAirSumber('sumur')" style="padding: 12px; border: 2px solid var(--border); background: transparent; color: var(--text); border-radius: var(--radius); cursor: pointer; font-size: 14px; font-weight: 500;">Air Sumur Bor</button>
+        </div>
+      </div>
+
+      <div id="airInputContainer" style="margin-top: 20px;">
+        <!-- Input dinamis akan dimuat di sini -->
+      </div>
+
+      <div class="group-divider">Hasil otomatis</div>
+      <div class="air-result-panel" style="background: var(--panel-2); border-radius: var(--radius); padding: 16px; margin-top: 10px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <span style="color: var(--text-dim);">Biaya per load</span>
+          <div style="font-size: 20px; font-weight: 600; color: var(--sage);" id="airBiayaPerLoad">Rp 0</div>
+        </div>
+        <div id="airInfoBox" style="background: var(--panel); border-left: 3px solid var(--sage); padding: 10px; border-radius: 4px; font-size: 12px; color: var(--text-faint); line-height: 1.5; display: none; margin-top: 10px;"></div>
+      </div>
+    </section>
+
   </div>
 </div>
 
@@ -1289,6 +1320,7 @@
     gasEditingId: null,
     gasIsNew: false,
     listrikCabangId: null,
+    airCabangId: null,
   };
   var cabangListCache = [];
   var formState = null;
@@ -1301,6 +1333,10 @@
   // Cache khusus Master Biaya Listrik, diisi tiap kali masuk ke screenListrikForm.
   var listrikCabangCache = null; // { id, namaLaundry, mesinCuci, mesinPengering }
   var listrikFormState = null;   // record biayaListrik yang sedang diedit (selalu 1 per cabang)
+
+  // Cache khusus Master Biaya Air, diisi tiap kali masuk ke screenAirForm.
+  var airCabangCache = null;     // { id, namaLaundry }
+  var airFormState = null;       // record biayaAir yang sedang diedit (selalu 1 per cabang)
 
   var localIdCounter = 0;
   function localId() {
@@ -1452,7 +1488,8 @@
     masterBiaya: "screenMasterBiaya",
     gasList: "screenGasList",
     gasForm: "screenGasForm",
-    listrikForm: "screenListrikForm"
+    listrikForm: "screenListrikForm",
+    airForm: "screenAirForm"
   };
 
   function showScreen(name) {
@@ -1590,6 +1627,28 @@
 
       content.appendChild(listrikCancelBtn);
       content.appendChild(listrikSaveBtn);
+      return;
+    }
+
+    if (view.screen === "airForm") {
+      bar.style.display = "flex";
+
+      var airCancelBtn = document.createElement("button");
+      airCancelBtn.className = "btn-secondary";
+      airCancelBtn.textContent = "Batal";
+      airCancelBtn.onclick = function () {
+        showScreen("masterBiaya");
+        refreshBiayaPickCabangList();
+      };
+
+      var airSaveBtn = document.createElement("button");
+      airSaveBtn.className = "btn-primary sage";
+      airSaveBtn.id = "airSaveBtn";
+      airSaveBtn.textContent = "Simpan perubahan";
+      airSaveBtn.onclick = saveAirForm;
+
+      content.appendChild(airCancelBtn);
+      content.appendChild(airSaveBtn);
       return;
     }
   }
@@ -2108,6 +2167,7 @@
       row.className = "pick-cabang-row";
       row.onclick = function () {
         if (view.kategoriBiayaAktif === "listrik") { openListrikForm(item.id); }
+        else if (view.kategoriBiayaAktif === "air") { openAirForm(item.id); }
         else { openGasList(item.id); }
       };
       row.innerHTML =
@@ -2739,11 +2799,218 @@
     });
   }
 
+  // =========================================================================
+  // SECTION: AIR FORM FUNCTIONS
+  // =========================================================================
+
+  function openAirForm(cabangId) {
+    view.airCabangId = cabangId;
+    showScreen("airForm");
+    document.getElementById("airTitle").textContent = "Analisa Biaya Air";
+    setSaveStatus("Memuat...", "busy");
+
+    google.script.run
+      .withSuccessHandler(function (res) {
+        if (!res || !res.ok) {
+          handleBackendError(res, "memuat data biaya air");
+          showScreen("masterBiaya");
+          refreshBiayaPickCabangList();
+          return;
+        }
+        airCabangCache = res.data.cabang;
+        airFormState = res.data.record;
+        document.getElementById("airTitle").textContent = "Analisa Biaya Air · " + (airCabangCache.namaLaundry || "(Tanpa nama)");
+        renderAirForm();
+        setSaveStatus("", "");
+      })
+      .withFailureHandler(function (err) {
+        handleBackendError({ error: err && err.message ? err.message : String(err), stage: "client:getBiayaAir" }, "memuat data biaya air");
+        showScreen("masterBiaya");
+        refreshBiayaPickCabangList();
+      })
+      .getBiayaAir(cabangId);
+  }
+  window.openAirForm = openAirForm;
+
+  function selectAirSumber(sumber) {
+    airFormState.sumberAir = sumber;
+    renderAirForm();
+  }
+  window.selectAirSumber = selectAirSumber;
+
+  function renderAirForm() {
+    if (!airFormState) return;
+
+    // Update button states
+    document.querySelectorAll(".air-sumber-btn").forEach(function (btn) {
+      var btnSumber = btn.getAttribute("data-sumber");
+      if (btnSumber === airFormState.sumberAir) {
+        btn.style.borderColor = "var(--sage)";
+        btn.style.color = "var(--sage)";
+        btn.style.fontWeight = "600";
+      } else {
+        btn.style.borderColor = "var(--border)";
+        btn.style.color = "var(--text)";
+        btn.style.fontWeight = "500";
+      }
+    });
+
+    // Render input fields based on selected source
+    var container = document.getElementById("airInputContainer");
+    container.innerHTML = "";
+
+    if (airFormState.sumberAir === "pdam") {
+      container.innerHTML = `
+        <div class="field">
+          <label for="airPdamHarga">Harga air per m³ (Rp)</label>
+          <input type="number" inputmode="decimal" min="0" step="0.01" id="airPdamHarga" placeholder="Contoh: 3000">
+          <div class="field-hint">Sesuaikan dengan tarif PDAM area laundry Anda.</div>
+        </div>
+        <div class="field">
+          <label for="airKebutuhanLiter">Kebutuhan air per load (liter)</label>
+          <input type="number" inputmode="decimal" min="0" step="0.1" id="airKebutuhanLiter" placeholder="Contoh: 200">
+          <div class="field-hint">Estimasi berdasarkan kapasitas mesin cuci utama Anda.</div>
+        </div>
+      `;
+      document.getElementById("airPdamHarga").value = airFormState.hargaPerM3 || "";
+      document.getElementById("airKebutuhanLiter").value = airFormState.kebutuhanAirPerLoad || "";
+      document.getElementById("airPdamHarga").addEventListener("input", function (e) {
+        airFormState.hargaPerM3 = Number(e.target.value) || 0;
+        renderAirPreview();
+      });
+      document.getElementById("airKebutuhanLiter").addEventListener("input", function (e) {
+        airFormState.kebutuhanAirPerLoad = Number(e.target.value) || 0;
+        renderAirPreview();
+      });
+    } else if (airFormState.sumberAir === "tangki") {
+      container.innerHTML = `
+        <div class="field">
+          <label for="airTangkiHarga">Harga per tangki (Rp)</label>
+          <input type="number" inputmode="decimal" min="0" step="0.01" id="airTangkiHarga" placeholder="Contoh: 50000">
+        </div>
+        <div class="field">
+          <label for="airTangkiKapasitas">Kapasitas tangki (liter)</label>
+          <input type="number" inputmode="decimal" min="0" step="1" id="airTangkiKapasitas" placeholder="Contoh: 1000">
+        </div>
+        <div class="field">
+          <label for="airKebutuhanLiter2">Kebutuhan air per load (liter)</label>
+          <input type="number" inputmode="decimal" min="0" step="0.1" id="airKebutuhanLiter2" placeholder="Contoh: 200">
+        </div>
+      `;
+      document.getElementById("airTangkiHarga").value = airFormState.hargaPerTangki || "";
+      document.getElementById("airTangkiKapasitas").value = airFormState.kapasitasTangkiLiter || "";
+      document.getElementById("airKebutuhanLiter2").value = airFormState.kebutuhanAirPerLoad || "";
+      document.getElementById("airTangkiHarga").addEventListener("input", function (e) {
+        airFormState.hargaPerTangki = Number(e.target.value) || 0;
+        renderAirPreview();
+      });
+      document.getElementById("airTangkiKapasitas").addEventListener("input", function (e) {
+        airFormState.kapasitasTangkiLiter = Number(e.target.value) || 0;
+        renderAirPreview();
+      });
+      document.getElementById("airKebutuhanLiter2").addEventListener("input", function (e) {
+        airFormState.kebutuhanAirPerLoad = Number(e.target.value) || 0;
+        renderAirPreview();
+      });
+    } else if (airFormState.sumberAir === "sumur") {
+      container.innerHTML = `
+        <div style="background: var(--panel-2); border-radius: var(--radius); padding: 16px; text-align: center;">
+          <div style="font-size: 14px; color: var(--text-faint); line-height: 1.6;">
+            Biaya air ditetapkan <strong>Rp0</strong>. Beban operasional sumur sudah dihitung otomatis pada konsumsi listrik Pompa Air di Tab Listrik.
+          </div>
+        </div>
+      `;
+    }
+
+    renderAirPreview();
+  }
+
+  function renderAirPreview() {
+    if (!airFormState) return;
+
+    var summary = computeAirSummary(airFormState);
+    document.getElementById("airBiayaPerLoad").textContent = "Rp " + formatRupiah(summary.biayaPerLoad);
+
+    var infoBox = document.getElementById("airInfoBox");
+    if (summary.infoText) {
+      infoBox.textContent = summary.infoText;
+      infoBox.style.display = "block";
+    } else {
+      infoBox.style.display = "none";
+    }
+  }
+
+  function computeAirSummary(record) {
+    var sumberAir = record.sumberAir || "pdam";
+    var biayaPerLoad = 0;
+    var infoText = "";
+
+    if (sumberAir === "pdam") {
+      var hargaPerM3 = Number(record.hargaPerM3) || 0;
+      var kebutuhanLiter = Number(record.kebutuhanAirPerLoad) || 0;
+      var m3PerLoad = kebutuhanLiter / 1000;
+      biayaPerLoad = round2(hargaPerM3 * m3PerLoad);
+    } else if (sumberAir === "tangki") {
+      var hargaPerTangki = Number(record.hargaPerTangki) || 0;
+      var kapasitasLiter = Number(record.kapasitasTangkiLiter) || 0;
+      var kebutuhanLiter = Number(record.kebutuhanAirPerLoad) || 0;
+      var biayaPerLiter = (kapasitasLiter > 0) ? hargaPerTangki / kapasitasLiter : 0;
+      biayaPerLoad = round2(biayaPerLiter * kebutuhanLiter);
+    } else if (sumberAir === "sumur") {
+      biayaPerLoad = 0;
+      infoText = "Biaya air ditetapkan Rp0. Beban operasional sumur sudah dihitung otomatis pada konsumsi listrik Pompa Air di Tab Listrik.";
+    }
+
+    return {
+      sumberAir: sumberAir,
+      biayaPerLoad: Math.max(0, biayaPerLoad),
+      infoText: infoText
+    };
+  }
+
+  function saveAirForm() {
+    if (!view.airCabangId || !airFormState) return;
+
+    var saveBtn = document.querySelector("footer .btn-primary");
+    if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = "Menyimpan..."; }
+    setSaveStatus("Menyimpan...", "busy");
+
+    google.script.run
+      .withSuccessHandler(function (res) {
+        if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = "Simpan perubahan"; }
+        setSaveStatus("", "");
+        if (!res || !res.ok) {
+          handleBackendError(res, "menyimpan data biaya air");
+          return;
+        }
+        showToast("Data biaya air berhasil disimpan");
+        airFormState = res.data.record;
+        renderAirForm();
+      })
+      .withFailureHandler(function (err) {
+        if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = "Simpan perubahan"; }
+        handleBackendError({ error: err && err.message ? err.message : String(err), stage: "client:saveBiayaAir" }, "menyimpan data biaya air");
+      })
+      .saveBiayaAir(view.airCabangId, airFormState);
+  }
+  window.saveAirForm = saveAirForm;
+
+  function bindAirFormInputs() {
+    if (view.screen === "airForm") {
+      var saveBtn = document.querySelector("footer .btn-primary");
+      if (saveBtn) {
+        saveBtn.textContent = "Simpan perubahan";
+        saveBtn.onclick = saveAirForm;
+      }
+    }
+  }
+
   document.addEventListener("DOMContentLoaded", function () {
     initTimeSelects();
     bindStaticFormInputs();
     bindGasFormInputs();
     bindListrikFormInputs();
+    bindAirFormInputs();
 
     document.getElementById("loadingState").style.display = "none";
     document.getElementById("appRoot").style.display = "block";
