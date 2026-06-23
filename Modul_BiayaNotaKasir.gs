@@ -38,6 +38,37 @@ function defaultBiayaNotaKasirRecord_(cabangId) {
   };
 }
 
+// Global headers constant to avoid repeated allocations
+const BIAYA_NOTA_KASIR_HEADERS_ = [
+  "id",
+  "cabangId",
+  "sistemNotaKasir",
+  "metodeBiayaAplikasi",
+  "biayaPerTransaksi",
+  "biayaBulananAplikasi",
+  "estimasiTransaksiPerBulan",
+  "hargaPerRoll",
+  "transaksiPerRoll",
+  "hargaSatuanAwalNota",
+  "jumlahLembarNota",
+  "notaPerTransaksi",
+  "createdAt",
+  "updatedAt",
+];
+
+function rowArrayToBiayaNotaKasirObject_(values) {
+  const obj = {};
+  for (let i = 0; i < BIAYA_NOTA_KASIR_HEADERS_.length; i++) {
+    obj[BIAYA_NOTA_KASIR_HEADERS_[i]] = values[i];
+  }
+  return obj;
+}
+
+function notaKasirErrorResponse_(err, stage) {
+  if (typeof errorResponse_ === "function") return errorResponse_(err, stage);
+  return { ok: false, error: err && err.message ? err.message : String(err), stage: stage || "notaKasir:unknown" };
+}
+
 // ============================================================================
 // SECTION: STORAGE SHEET HELPERS
 // ============================================================================
@@ -47,28 +78,13 @@ function getBiayaNotaKasirSheet_() {
   let sheet = ss.getSheetByName("BiayaNotaKasir");
   if (!sheet) {
     sheet = ss.insertSheet("BiayaNotaKasir");
-    const headers = [
-      "id",
-      "cabangId",
-      "sistemNotaKasir",
-      "metodeBiayaAplikasi",
-      "biayaPerTransaksi",
-      "biayaBulananAplikasi",
-      "estimasiTransaksiPerBulan",
-      "hargaPerRoll",
-      "transaksiPerRoll",
-      "hargaSatuanAwalNota",
-      "jumlahLembarNota",
-      "notaPerTransaksi",
-      "createdAt",
-      "updatedAt",
-    ];
-    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+    sheet.getRange(1, 1, 1, BIAYA_NOTA_KASIR_HEADERS_.length).setValues([BIAYA_NOTA_KASIR_HEADERS_]);
   }
   return sheet;
 }
 
 function findBiayaNotaKasirRow_(sheet, cabangId) {
+  // Legacy (slow) implementation retained for compatibility.
   const values = sheet.getDataRange().getValues();
   const header = values[0] || [];
   const cabangIdIndex = header.indexOf("cabangId");
@@ -76,6 +92,20 @@ function findBiayaNotaKasirRow_(sheet, cabangId) {
   for (let i = 1; i < values.length; i++) {
     if (String(values[i][cabangIdIndex]) === cabangId) {
       return i + 1;
+    }
+  }
+  return -1;
+}
+
+// Faster row finder that only reads the cabangId column
+function findBiayaNotaKasirRowFast_(sheet, cabangId) {
+  const lastRow = sheet.getLastRow();
+  if (lastRow < 2) return -1;
+  const values = sheet.getRange(2, 2, lastRow - 1, 1).getValues();
+  const target = String(cabangId);
+  for (let i = 0; i < values.length; i++) {
+    if (String(values[i][0]) === target) {
+      return i + 2;
     }
   }
   return -1;
@@ -149,39 +179,20 @@ function getBiayaNotaKasir(cabangId) {
     }
     if (typeof ensureMigrated_ === "function") {
       try {
+        // Do not force a full migration during reads; keep guarded.
         ensureMigrated_();
       } catch (e) {
         console.warn("[NotaKasir] ensureMigrated_ gagal, melanjutkan tanpa migrasi:", e);
       }
     }
 
-    const cabang = getCabangInfo_(cabangId);
     const sheet = getBiayaNotaKasirSheet_();
-    const rowIndex = findBiayaNotaKasirRow_(sheet, cabangId);
+    const rowIndex = findBiayaNotaKasirRowFast_(sheet, cabangId);
 
     let record;
     if (rowIndex > 0) {
-      const values = sheet.getRange(rowIndex, 1, 1, 14).getValues()[0];
-      const headers = [
-        "id",
-        "cabangId",
-        "sistemNotaKasir",
-        "metodeBiayaAplikasi",
-        "biayaPerTransaksi",
-        "biayaBulananAplikasi",
-        "estimasiTransaksiPerBulan",
-        "hargaPerRoll",
-        "transaksiPerRoll",
-        "hargaSatuanAwalNota",
-        "jumlahLembarNota",
-        "notaPerTransaksi",
-        "createdAt",
-        "updatedAt",
-      ];
-      const rowObject = {};
-      for (let i = 0; i < headers.length; i++) {
-        rowObject[headers[i]] = values[i];
-      }
+      const values = sheet.getRange(rowIndex, 1, 1, BIAYA_NOTA_KASIR_HEADERS_.length).getValues()[0];
+      const rowObject = rowArrayToBiayaNotaKasirObject_(values);
       record = normalizeBiayaNotaKasirRecord_(rowObject, cabangId);
     } else {
       record = defaultBiayaNotaKasirRecord_(cabangId);
@@ -193,9 +204,9 @@ function getBiayaNotaKasir(cabangId) {
         cabang: { id: cabang.id, namaLaundry: cabang.namaLaundry },
         record: record,
         summary: computeBiayaNotaKasirSummary_(record),
-      },
-    };
-  } catch (err) {
+      } catch (err) {
+        return notaKasirErrorResponse_(err, "getBiayaNotaKasir");
+      }
     return errorResponse_(err, "getBiayaNotaKasir");
   }
 }
@@ -206,35 +217,23 @@ function saveBiayaNotaKasir(cabangId, payload) {
       return { ok: false, error: "ID cabang tidak valid.", stage: "saveBiayaNotaKasir:validate_cabang_id" };
     }
     if (!payload || typeof payload !== "object") {
-      return { ok: false, error: "Data yang dikirim tidak valid.", stage: "saveBiayaNotaKasir:validate_payload" };
-    }
-    ensureMigrated_();
+        // Guarded migration call - avoid forcing heavy migration during save
+        if (typeof ensureMigrated_ === "function") {
+          try {
+            ensureMigrated_();
+          } catch (e) {
+            console.warn("[NotaKasir] ensureMigrated_ dilewati saat save:", e);
+          }
+        }
 
-    const cabang = getCabangInfo_(cabangId);
-    const sheet = getBiayaNotaKasirSheet_();
-    const rowIndex = findBiayaNotaKasirRow_(sheet, cabangId);
+        const sheet = getBiayaNotaKasirSheet_();
+        const rowIndex = findBiayaNotaKasirRowFast_(sheet, cabangId);
 
-    const existingRecord = rowIndex > 0
-      ? parseBiayaNotaKasirRecord_(sheet.getRange(rowIndex, 1, 1, 14).getValues()[0].reduce(function (acc, value, idx) {
-          acc[
-            [
-              "id",
-              "cabangId",
-              "sistemNotaKasir",
-              "metodeBiayaAplikasi",
-              "biayaPerTransaksi",
-              "biayaBulananAplikasi",
-              "estimasiTransaksiPerBulan",
-              "hargaPerRoll",
-              "transaksiPerRoll",
-              "hargaSatuanAwalNota",
-              "jumlahLembarNota",
-              "notaPerTransaksi",
-              "createdAt",
-              "updatedAt",
-            ][idx]
-          ] = value;
-          return acc;
+        let existingRecord = null;
+        if (rowIndex > 0) {
+          const existingValues = sheet.getRange(rowIndex, 1, 1, BIAYA_NOTA_KASIR_HEADERS_.length).getValues()[0];
+          existingRecord = parseBiayaNotaKasirRecord_(rowArrayToBiayaNotaKasirObject_(existingValues));
+        }
         }, {}))
       : null;
 
@@ -264,7 +263,7 @@ function saveBiayaNotaKasir(cabangId, payload) {
       },
     };
   } catch (err) {
-    return errorResponse_(err, "saveBiayaNotaKasir");
+    return notaKasirErrorResponse_(err, "saveBiayaKasir");
   }
 }
 

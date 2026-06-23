@@ -3234,8 +3234,20 @@ function selectGasCustom() {
     }
     setSaveStatus("Menyimpan...", "busy");
 
+    // UX timeout: jangan biarkan tombol tergantung selamanya
+    var saveTimeout = window.setTimeout(function () {
+      var btn = document.getElementById("notaKasirSaveBtn");
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = "Simpan perubahan";
+      }
+      setSaveStatus("Lambat", "err");
+      showToast("Proses simpan lambat. Coba klik simpan lagi jika belum tersimpan.", "err");
+    }, 10000);
+
     google.script.run
       .withSuccessHandler(function (res) {
+        window.clearTimeout(saveTimeout);
         if (saveBtn) {
           saveBtn.disabled = false;
           saveBtn.textContent = "Simpan perubahan";
@@ -3244,12 +3256,14 @@ function selectGasCustom() {
           handleBackendError(res, "menyimpan data biaya nota kasir");
           return;
         }
-        notaKasirFormState = res.data.record;
-        renderNotaKasirForm();
+        notaKasirFormState = res.data.record || notaKasirFormState;
+        // Hanya update ringkasan/pratinjau agar input tidak ter-reset
+        renderNotaKasirPreview();
         showToast("Data biaya nota/ kasir tersimpan.", "ok");
         setSaveStatus("Tersimpan", "ok");
       })
       .withFailureHandler(function (err) {
+        window.clearTimeout(saveTimeout);
         if (saveBtn) {
           saveBtn.disabled = false;
           saveBtn.textContent = "Simpan perubahan";
