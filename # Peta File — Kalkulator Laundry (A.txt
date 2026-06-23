@@ -1,0 +1,59 @@
+# Peta File — Kalkulator Laundry (Apps Script)
+
+Catatan ini untuk membantu memutuskan **file mana yang harus dikirim** saat mau menambah fitur atau memperbaiki sesuatu.
+
+---
+
+## Backend (.gs) — 7 file
+
+| File | Isinya | Kirim file ini kalau... |
+|---|---|---|
+| **Code.gs** | Pintu masuk web app (`doGet`) + nomor versi skema + peta seluruh project | Hampir tidak pernah perlu dikirim sendirian — biasanya cuma referensi |
+| **Util_Umum.gs** | Helper dasar: rapikan angka/teks, buat ID unik, pembulatan, bentuk error standar | Hampir tidak pernah perlu diubah — ini fondasi yang dipakai semua fitur |
+| **Util_Penyimpanan.gs** | Cara baca/tulis/hapus data di Sheet tersembunyi | Kalau mau ganti cara data disimpan (jarang terjadi) |
+| **Migrasi_Skema.gs** | Riwayat perubahan struktur data dari versi ke versi | Kalau nambah fitur besar yang mengubah bentuk data lama |
+| **Modul_Cabang.gs** | Semua hal soal **Cabang & Lokasi**: profil outlet, mesin cuci/pengering, hitung kapasitas (load/hari) | **Mau ubah fitur Cabang & Lokasi** — tambah field profil, ubah rumus kapasitas, dll |
+| **Modul_BiayaGas.gs** | Semua hal soal **Master Biaya → Gas**: kartu gas per cabang, rumus estimasi load & biaya | **Mau ubah fitur Gas** — rumus, preset tabung, validasi, dll |
+| **Modul_BiayaListrik.gs** | Semua hal soal **Master Biaya → Listrik**: TDL, watt cuci/pengering/pompa, rumus Rp per load | **Mau ubah fitur Listrik** — rumus, alokasi pompa air, dll |
+
+## Frontend
+| File | Isinya |
+|---|---|
+| **Index.html** | Semua tampilan (CSS + HTML) dan semua interaksi (JavaScript) — semua layar masih dalam 1 file ini |
+
+---
+
+## Cara cepat menentukan file mana yang dikirim
+
+**Tanya ke diri sendiri:** "Saya mau ubah/tambah apa?"
+
+| Saya mau... | Kirim file ini |
+|---|---|
+| Ubah tampilan, tombol, warna, layout apapun | **Index.html** (selalu ini untuk urusan tampilan) |
+| Ubah rumus kapasitas cuci/pengering (load/hari) | **Modul_Cabang.gs** + Index.html |
+| Tambah field baru di profil cabang (misal alamat, no. HP) | **Modul_Cabang.gs** + Index.html |
+| Ubah rumus/preset Gas | **Modul_BiayaGas.gs** + Index.html |
+| Ubah rumus Listrik / pompa air | **Modul_BiayaListrik.gs** + Index.html |
+| **Tambah kategori biaya baru** (Air, Deterjen, dst) | Kirim **semua 7 file .gs** + Index.html — karena ini fitur besar yang nyontoh pola Gas/Listrik dan nyentuh Modul_Cabang.gs (cascade delete) |
+| Ada error, tidak tahu sumbernya | Kirim **semua 7 file .gs** + Index.html, sertakan pesan error / `stage` yang muncul |
+| Ubah cara data disimpan, migrasi versi baru | **Util_Penyimpanan.gs** + **Migrasi_Skema.gs** |
+
+**Kalau ragu file mana yang cukup → kirim semua 7 file .gs + Index.html sekaligus.** Tidak masalah dan lebih aman daripada kirim sebagian dan ternyata kurang.
+
+---
+
+## Cara baca error dengan cepat
+
+Setiap error dari aplikasi punya kode **"stage"**, formatnya: `namaFungsi:tahapGagal`
+
+Contoh: `createBiayaGas:validate_business_rules`
+→ Artinya: buka **Modul_BiayaGas.gs**, cari fungsi `createBiayaGas`, masalahnya di bagian validasi aturan bisnis.
+
+Pola nama fungsi menunjukkan file-nya:
+- `xxxCabang` → Modul_Cabang.gs
+- `xxxBiayaGas` → Modul_BiayaGas.gs
+- `xxxBiayaListrik` → Modul_BiayaListrik.gs
+
+---
+
+*Catatan dibuat: 22 Juni 2026*

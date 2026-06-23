@@ -1,0 +1,2757 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<!-- Penambahan meta tag agar responsif & full-screen di Home Screen HP -->
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0B0E12">
+<title>Kalkulator Laundry</title>
+<style>
+  :root {
+    --bg: #0B0E12;
+    --panel: #13171D;
+    --panel-2: #181D24;
+    --border: #262B33;
+    --text: #E8EAED;
+    --text-dim: #8A909B;
+    --text-faint: #565C66;
+    --sage: #6FA08C;
+    --sage-dim: #3E5C50;
+    --brass: #D9A24B;
+    --brass-dim: #5C4A28;
+    --red: #C2604E;
+    --red-dim: #4A2E26;
+    --flame: #D9714B;
+    --flame-dim: #5C3424;
+    --volt: #D9C24B;
+    --volt-dim: #5C5424;
+    --radius: 10px;
+    --radius-lg: 16px;
+    --font-display: 'Space Grotesk', 'Inter', -apple-system, sans-serif;
+    --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html {
+    background: var(--bg);
+    min-height: 100%;
+    height: 100%;
+  }
+
+  html, body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    /* PERBAIKAN: Mencegah layar terpotong atau bisa digeser ke samping */
+    max-width: 100%;
+    overflow-x: hidden; 
+    min-height: 100vh;
+  }
+
+  body {
+    padding: 16px;
+    padding-bottom: calc(90px + env(safe-area-inset-bottom, 0px));
+    min-height: 100%;
+  }
+
+  .wrap { max-width: 480px; margin: 0 auto; }
+
+  header.app-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    padding-top: 4px;
+    gap: 10px;
+  }
+
+  .header-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
+
+  .back-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    border-radius: 8px;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+  .back-btn:hover { border-color: var(--sage); color: var(--sage); }
+
+  .brand {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 19px;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .brand span { color: var(--brass); }
+
+  .save-status {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-faint);
+    text-align: right;
+    min-height: 14px;
+    flex-shrink: 0;
+  }
+  .save-status.ok { color: var(--sage); }
+  .save-status.err { color: var(--red); }
+  .save-status.busy { color: var(--brass); }
+
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  .list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 16px;
+  }
+  .list-header h1 {
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 600;
+  }
+  .list-header .count {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-faint);
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /* MENU UTAMA (gerbang sebelum daftar cabang / Master Biaya)              */
+  /* ---------------------------------------------------------------------- */
+  .menu-grid { display: flex; flex-direction: column; gap: 12px; }
+  .menu-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    cursor: pointer;
+    transition: border-color 0.15s ease;
+    text-align: left;
+  }
+  .menu-card:hover { border-color: var(--sage-dim); }
+  .menu-card .menu-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+  .menu-card.tone-sage .menu-icon { background: rgba(111,160,140,0.12); color: var(--sage); }
+  .menu-card.tone-flame .menu-icon { background: rgba(217,113,75,0.12); color: var(--flame); }
+  .menu-card.tone-volt .menu-icon { background: rgba(217,194,75,0.12); color: var(--volt); }
+  .menu-card .menu-body { flex: 1; min-width: 0; }
+  .menu-card .menu-title {
+    font-family: var(--font-display);
+    font-size: 15.5px;
+    font-weight: 600;
+    margin-bottom: 3px;
+  }
+  .menu-card .menu-desc { font-size: 12.5px; color: var(--text-faint); line-height: 1.4; }
+  .menu-card .menu-arrow { color: var(--text-faint); font-size: 16px; flex-shrink: 0; }
+
+  .cabang-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 16px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: border-color 0.15s ease;
+  }
+  .cabang-card:hover { border-color: var(--sage-dim); }
+
+  .cabang-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+  }
+  .cabang-card-top h3 {
+    font-family: var(--font-display);
+    font-size: 16px;
+    font-weight: 600;
+  }
+  .cabang-card-top .arrow { color: var(--text-faint); font-size: 16px; }
+
+  .cabang-card-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .meta-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 12.5px;
+  }
+  .meta-row .meta-label { color: var(--text-faint); }
+  .meta-row .meta-val { color: var(--text-dim); font-weight: 500; text-align: right; }
+
+  .cabang-card-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .mini-stat .label { font-size: 11px; color: var(--text-faint); margin-bottom: 3px; }
+  .mini-stat .num { font-family: var(--font-mono); font-size: 14px; color: var(--text); font-weight: 600; }
+  .mini-stat .num .unit { font-size: 10px; color: var(--text-faint); margin-left: 2px; font-weight: 500; }
+
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-faint);
+  }
+  .empty-state .icon { font-size: 32px; margin-bottom: 12px; opacity: 0.5; }
+  .empty-state p { font-size: 13.5px; line-height: 1.5; }
+
+  .add-cabang-btn {
+    width: 100%;
+    background: var(--sage);
+    color: #0B0E12;
+    border: none;
+    border-radius: var(--radius);
+    padding: 14px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 8px;
+  }
+  .add-cabang-btn:hover { filter: brightness(1.08); }
+  .add-cabang-btn.flame { background: var(--flame); }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 18px;
+    margin-bottom: 14px;
+  }
+
+  .panel-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .panel-head .idx {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--brass);
+    border: 1px solid var(--brass-dim);
+    border-radius: 4px;
+    padding: 2px 6px;
+    flex-shrink: 0;
+  }
+  .panel-head h2 {
+    font-family: var(--font-display);
+    font-size: 15px;
+    font-weight: 600;
+    flex: 1;
+  }
+  .panel-head .chev {
+    color: var(--text-faint);
+    font-size: 13px;
+    transition: transform 0.18s ease;
+    flex-shrink: 0;
+  }
+  .panel.collapsed .panel-head .chev { transform: rotate(-90deg); }
+  .panel-body { overflow: hidden; }
+  .panel.collapsed .panel-body { display: none; }
+
+  label {
+    display: block;
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+    font-weight: 500;
+  }
+
+  .field { margin-bottom: 14px; }
+  .field:last-child { margin-bottom: 0; }
+  .field-hint { font-size: 11px; color: var(--text-faint); margin-top: 6px; line-height: 1.4; }
+
+  input[type="text"], input[type="number"], select {
+    width: 100%;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: var(--radius);
+    padding: 10px 12px;
+    font-size: 15px;
+    font-family: var(--font-body);
+    transition: border-color 0.15s ease;
+  }
+  input[type="number"] { font-family: var(--font-mono); }
+  input:focus, select:focus { outline: none; border-color: var(--sage); }
+  input.input-err, select.input-err { border-color: var(--red); }
+  select {
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0L5 6L10 0Z' fill='%238A909B'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 32px;
+  }
+
+  .time-picker-row { display: flex; align-items: center; gap: 6px; }
+  .time-picker-row select { text-align: center; }
+  .time-picker-row .colon { font-family: var(--font-mono); color: var(--text-faint); font-size: 16px; }
+
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  .duration-readout {
+    margin-top: 10px;
+    display: flex;
+    gap: 16px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--sage);
+  }
+
+  .machine-list { display: flex; flex-direction: column; gap: 10px; }
+  .machine-row {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px;
+  }
+  .machine-row-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .machine-row-top .tag { font-family: var(--font-mono); font-size: 11px; color: var(--text-faint); }
+
+  .icon-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-faint);
+    border-radius: 6px;
+    width: 26px;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1;
+    transition: all 0.15s ease;
+  }
+  .icon-btn:hover { border-color: var(--red); color: var(--red); }
+
+  .machine-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .machine-grid .field { margin-bottom: 0; }
+  .machine-grid label { font-size: 11px; margin-bottom: 4px; }
+
+  .add-btn {
+    width: 100%;
+    background: transparent;
+    border: 1px dashed var(--border);
+    color: var(--text-dim);
+    border-radius: var(--radius);
+    padding: 11px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: all 0.15s ease;
+  }
+  .add-btn:hover { border-color: var(--sage); color: var(--sage); }
+  .add-btn.flame:hover { border-color: var(--flame); color: var(--flame); }
+
+  .empty-hint { font-size: 12.5px; color: var(--text-faint); text-align: center; padding: 14px 0; }
+
+  .meter-block { margin-bottom: 16px; }
+  .meter-block:last-child { margin-bottom: 0; }
+  .meter-label-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+  .meter-label-row .name { font-size: 13px; color: var(--text-dim); font-weight: 500; }
+  .meter-label-row .val { font-family: var(--font-mono); font-size: 15px; color: var(--brass); font-weight: 600; }
+
+  input[type="range"] { width: 100%; -webkit-appearance: none; height: 5px; background: var(--border); border-radius: 3px; outline: none; }
+  input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--brass); cursor: pointer; border: 2px solid var(--bg); }
+  input[type="range"]::-moz-range-thumb { width: 18px; height: 18px; border-radius: 50%; background: var(--brass); cursor: pointer; border: 2px solid var(--bg); }
+
+  /* PERBAIKAN: flex-wrap untuk menghindari kepotong jika layar sempit */
+  .pill-group { display: flex; gap: 8px; flex-wrap: wrap; }
+  
+  .pill {
+    flex: 1;
+    text-align: center;
+    padding: 10px 8px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--panel-2);
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    min-width: fit-content;
+  }
+  .pill.active { border-color: var(--sage); color: var(--sage); background: rgba(111, 160, 140, 0.08); }
+  .pill.active.flame { border-color: var(--flame); color: var(--flame); background: rgba(217, 113, 75, 0.08); }
+  .pill.active.volt { border-color: var(--volt); color: var(--volt); background: rgba(217, 194, 75, 0.08); }
+  .pill.disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .group-divider {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 18px 0 12px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .group-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  .form-actions { display: flex; gap: 10px; margin-top: 4px; }
+  .btn-secondary {
+    flex: 1;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    border-radius: var(--radius);
+    padding: 13px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .btn-secondary:hover { border-color: var(--text-dim); }
+  .btn-primary {
+    flex: 2;
+    background: var(--sage);
+    color: #0B0E12;
+    border: none;
+    border-radius: var(--radius);
+    padding: 13px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .btn-primary:hover { filter: brightness(1.08); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-primary.flame { background: var(--flame); }
+  .btn-primary.volt { background: var(--volt); }
+
+  .summary-hero {
+    background: linear-gradient(165deg, var(--panel) 0%, var(--panel-2) 100%);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 26px 22px;
+    margin-bottom: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .summary-hero::before {
+    content: '';
+    position: absolute;
+    top: -40%;
+    right: -20%;
+    width: 220px;
+    height: 220px;
+    background: radial-gradient(circle, rgba(217,162,75,0.07), transparent 70%);
+    pointer-events: none;
+  }
+  .summary-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--brass);
+    margin-bottom: 8px;
+  }
+  .summary-title {
+    font-family: var(--font-display);
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin-bottom: 14px;
+  }
+  .summary-meta { display: flex; gap: 18px; font-size: 12.5px; color: var(--text-dim); flex-wrap: wrap; }
+  .summary-meta b { color: var(--text); font-weight: 600; }
+
+  .summary-section-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--sage);
+    margin-bottom: 12px;
+  }
+  .summary-section-label.flame { color: var(--flame); }
+
+  .summary-panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 20px 18px;
+    margin-bottom: 14px;
+  }
+
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 4px; }
+  .stat-card { background: var(--panel-2); border-radius: var(--radius); padding: 12px 14px; }
+  .stat-card .label { font-size: 11px; color: var(--text-faint); margin-bottom: 6px; }
+  .stat-card .num { font-family: var(--font-display); font-size: 22px; font-weight: 700; color: var(--text); line-height: 1.1; }
+  .stat-card .num .unit { font-size: 12px; color: var(--text-faint); font-weight: 500; margin-left: 3px; }
+  .stat-card.brass .num { color: var(--brass); }
+  .stat-card.flame .num { color: var(--flame); }
+
+  .scale-table { margin-top: 14px; border-top: 1px solid var(--border); padding-top: 14px; }
+  .scale-row { display: flex; justify-content: space-between; align-items: baseline; padding: 7px 0; font-size: 13px; }
+  .scale-row .k { color: var(--text-dim); }
+  .scale-row .v { font-family: var(--font-mono); font-weight: 600; color: var(--text); }
+  .scale-row.highlight .v { color: var(--brass); font-size: 15px; }
+  .scale-row.highlight.flame .v { color: var(--flame); }
+
+  .machine-summary-list { display: flex; flex-direction: column; gap: 8px; }
+  .machine-summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--panel-2);
+    border-radius: var(--radius);
+    padding: 10px 12px;
+    font-size: 12.5px;
+  }
+  .machine-summary-row .name { color: var(--text); font-weight: 500; }
+  .machine-summary-row .detail { color: var(--text-faint); font-family: var(--font-mono); font-size: 11.5px; }
+
+  .btn-danger {
+    background: transparent;
+    border: 1px solid var(--red-dim);
+    color: var(--red);
+    border-radius: var(--radius);
+    padding: 13px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    width: 48px;
+    flex-shrink: 0;
+  }
+  .btn-danger:hover { background: rgba(194,96,78,0.1); }
+
+  .toast {
+    position: fixed;
+    top: 16px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-8px);
+    background: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 16px;
+    border-radius: var(--radius);
+    font-size: 13px;
+    opacity: 0;
+    transition: all 0.25s ease;
+    pointer-events: none;
+    z-index: 100;
+    max-width: 90%;
+    text-align: center;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast.err { border-color: var(--red); color: #F0B5AA; }
+  .toast.ok { border-color: var(--sage-dim); color: var(--sage); }
+
+  .confirm-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    padding: 20px;
+  }
+  .confirm-overlay.show { display: flex; }
+  .confirm-box {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 22px;
+    max-width: 340px;
+    width: 100%;
+  }
+  .confirm-box h3 { font-family: var(--font-display); font-size: 16px; margin-bottom: 8px; }
+  .confirm-box p { font-size: 13.5px; color: var(--text-dim); line-height: 1.5; margin-bottom: 18px; }
+  .confirm-actions { display: flex; gap: 10px; }
+
+  .skeleton-line { height: 14px; background: var(--panel-2); border-radius: 4px; animation: pulse 1.1s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+
+  .footer-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(180deg, transparent, var(--bg) 30%);
+    padding: 16px;
+    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    display: flex;
+    justify-content: center;
+  }
+  .footer-bar .wrap-inner { max-width: 448px; width: 100%; display: flex; gap: 10px; }
+
+  /* ---------------------------------------------------------------------- */
+  /* MASTER BIAYA — pilih cabang (sub-langkah sebelum daftar kartu gas)     */
+  /* ---------------------------------------------------------------------- */
+  .pick-cabang-row {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: border-color 0.15s ease;
+  }
+  .pick-cabang-row:hover { border-color: var(--flame-dim); }
+  .pick-cabang-row .name { font-family: var(--font-display); font-size: 14.5px; font-weight: 600; }
+  .pick-cabang-row .arrow { color: var(--text-faint); }
+
+  .gas-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 18px;
+    margin-bottom: 14px;
+  }
+  .gas-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+  .gas-card-top .title-group { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .gas-card-top .flame-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--flame); flex-shrink: 0;
+  }
+  .gas-card-top h3 {
+    font-family: var(--font-display);
+    font-size: 15px;
+    font-weight: 600;
+  }
+  .gas-card-top .actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+  .gas-card-result {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+  }
+  .gas-result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+  .gas-result-cell {
+    background: var(--panel-2);
+    border-radius: var(--radius);
+    padding: 10px 12px;
+  }
+  .gas-result-cell .label { font-size: 10.5px; color: var(--text-faint); margin-bottom: 4px; }
+  .gas-result-cell .val { font-family: var(--font-mono); font-size: 14px; font-weight: 600; color: var(--text); }
+  .gas-result-cell.highlight { background: rgba(217,113,75,0.1); border: 1px solid var(--flame-dim); }
+  .gas-result-cell.highlight .val { color: var(--flame); font-size: 15px; }
+  .gas-result-cell .val .unit { font-size: 10px; color: var(--text-faint); margin-left: 2px; }
+
+  .gas-warning {
+    margin-top: 10px;
+    background: rgba(194,96,78,0.08);
+    border: 1px solid var(--red-dim);
+    border-radius: var(--radius);
+    padding: 10px 12px;
+    font-size: 12px;
+    color: #F0B5AA;
+    line-height: 1.4;
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /* MASTER BIAYA — LISTRIK                                                 */
+  /* ---------------------------------------------------------------------- */
+  .tdl-panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 18px;
+    margin-bottom: 14px;
+  }
+  .tdl-panel label {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+  }
+  .tdl-input-row { display: flex; align-items: center; gap: 8px; }
+  .tdl-input-row .prefix {
+    font-family: var(--font-mono);
+    font-size: 19px;
+    color: var(--text-dim);
+    flex-shrink: 0;
+  }
+  .tdl-input-row input[type="number"] {
+    font-family: var(--font-display);
+    font-size: 19px;
+    font-weight: 700;
+    padding: 12px 14px;
+  }
+
+  .listrik-kategori-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .listrik-kategori-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 16px;
+  }
+  .listrik-kategori-card.full { grid-column: 1 / -1; }
+  .listrik-kategori-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .listrik-kategori-top .name {
+    font-family: var(--font-display);
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .listrik-kategori-top .name.cuci { color: var(--sage); }
+  .listrik-kategori-top .name.kering { color: var(--flame); }
+  .listrik-kategori-top .name.pompa { color: #6FA8D9; }
+  .listrik-kategori-icon {
+    width: 30px; height: 30px;
+    border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+  .listrik-kategori-icon.cuci { background: rgba(111,160,140,0.12); }
+  .listrik-kategori-icon.kering { background: rgba(217,113,75,0.12); }
+  .listrik-kategori-icon.pompa { background: rgba(111,168,217,0.12); }
+
+  .listrik-kategori-card label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    margin-bottom: 6px;
+  }
+
+  .listrik-rincian-list { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border); }
+  .listrik-rincian-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 12px;
+  }
+  .listrik-rincian-row .k { color: var(--text-faint); }
+  .listrik-rincian-row .v { font-family: var(--font-mono); font-weight: 600; color: var(--text); }
+  .listrik-rincian-row .v.muted { color: var(--text-faint); font-weight: 500; }
+  .listrik-rincian-empty { font-size: 12px; color: var(--text-faint); margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border); }
+
+  .listrik-total-bar {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .listrik-total-bar .k { font-size: 12.5px; color: var(--text-dim); font-weight: 500; }
+  .listrik-total-bar .v { font-family: var(--font-mono); font-size: 15px; font-weight: 700; color: var(--volt); }
+
+  @media (max-width: 759px) {
+    .listrik-kategori-grid { grid-template-columns: 1fr; }
+  }
+
+  @media (min-width: 760px) {
+    body { padding: 28px 32px 90px; }
+    .wrap { max-width: 1080px; }
+    .layout-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-items: start; }
+    .layout-grid .col-input { display: flex; flex-direction: column; }
+    .layout-grid .col-output { position: sticky; top: 24px; }
+    .machine-grid { grid-template-columns: repeat(4, 1fr); }
+    .stat-grid { grid-template-columns: repeat(2, 1fr); }
+    .footer-bar { justify-content: flex-end; padding: 16px 32px; }
+    .footer-bar .wrap-inner { max-width: 320px; }
+    #screenList .list-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    #screenRingkasan .ringkasan-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+    #screenGasList .gas-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  }
+
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="app-header">
+    <div class="header-left">
+      <button class="back-btn" id="backBtn" style="display:none;" onclick="goBack()" aria-label="Kembali">&#8592;</button>
+      <div class="brand">Kalkulator<span>Laundry</span></div>
+    </div>
+    <div class="save-status" id="saveStatus"></div>
+  </header>
+
+  <div id="loadingState">
+    <div class="panel">
+      <div class="skeleton-line" style="width:40%; margin-bottom:14px;"></div>
+      <div class="skeleton-line" style="width:100%; margin-bottom:8px;"></div>
+      <div class="skeleton-line" style="width:80%;"></div>
+    </div>
+  </div>
+
+  <div id="appRoot" style="display:none;">
+
+    <!-- ===================================================================
+         LAYAR: MENU UTAMA — gerbang ke "Cabang & Lokasi" dan "Master Biaya"
+    =================================================================== -->
+    <section class="screen" id="screenMenu">
+      <div class="list-header">
+        <h1>Menu utama</h1>
+      </div>
+      <div class="menu-grid">
+        <div class="menu-card tone-sage" onclick="openScreenCabangList()">
+          <div class="menu-icon">&#127981;</div>
+          <div class="menu-body">
+            <div class="menu-title">Cabang &amp; lokasi</div>
+            <div class="menu-desc">Kelola profil operasional, mesin cuci dan pengering per outlet.</div>
+          </div>
+          <div class="menu-arrow">&#8594;</div>
+        </div>
+        <div class="menu-card tone-flame" onclick="openScreenMasterBiaya()">
+          <div class="menu-icon">&#128293;</div>
+          <div class="menu-body">
+            <div class="menu-title">Master Biaya</div>
+            <div class="menu-desc">Hitung biaya operasional per outlet. Saat ini: Gas LPG &amp; Listrik.</div>
+          </div>
+          <div class="menu-arrow">&#8594;</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================
+         LAYAR: DAFTAR CABANG (sebelumnya screenList)
+    =================================================================== -->
+    <section class="screen" id="screenList">
+      <div class="list-header">
+        <h1>Cabang &amp; lokasi</h1>
+        <span class="count" id="cabangCount">0 cabang</span>
+      </div>
+      <div id="cabangListEmpty" class="empty-state" style="display:none;">
+        <div class="icon">&#128465;</div>
+        <p>Belum ada data operasional.<br>Tambahkan cabang pertama untuk mulai menghitung kapasitas.</p>
+      </div>
+      <div class="list-grid" id="cabangList"></div>
+      <button class="add-cabang-btn" onclick="openFormNew()">+ Tambah cabang baru</button>
+    </section>
+
+    <section class="screen" id="screenRingkasan">
+      <div class="summary-hero">
+        <div class="summary-eyebrow">Profil Operasional</div>
+        <div class="summary-title" id="rNamaLaundry">-</div>
+        <div class="summary-meta">
+          <span>Jam operasional: <b id="rJamOperasional">-</b></span>
+          <span>Layanan: <b id="rKategoriLayanan">-</b></span>
+        </div>
+      </div>
+
+      <div class="ringkasan-grid">
+        <div>
+          <div class="summary-panel">
+            <div class="summary-section-label">Mesin cuci</div>
+            <div class="stat-grid">
+              <div class="stat-card">
+                <div class="label">Total unit</div>
+                <div class="num" id="rCuciUnit">0</div>
+              </div>
+              <div class="stat-card brass">
+                <div class="label">Kapasitas maksimal/hari</div>
+                <div class="num" id="rCuciMax">0<span class="unit">load</span></div>
+              </div>
+            </div>
+            <div class="scale-table">
+              <div class="scale-row highlight"><span class="k">Load per hari (setelah okupansi)</span><span class="v" id="rCuciHari">0 load</span></div>
+              <div class="scale-row"><span class="k">Load per minggu</span><span class="v" id="rCuciMinggu">0 load</span></div>
+              <div class="scale-row"><span class="k">Load per bulan</span><span class="v" id="rCuciBulan">0 load</span></div>
+            </div>
+            <div class="group-divider">Rincian unit</div>
+            <div class="machine-summary-list" id="rCuciDetail"></div>
+          </div>
+        </div>
+
+        <div>
+          <div class="summary-panel">
+            <div class="summary-section-label">Mesin pengering</div>
+            <div class="stat-grid">
+              <div class="stat-card">
+                <div class="label">Total unit</div>
+                <div class="num" id="rKeringUnit">0</div>
+              </div>
+              <div class="stat-card brass">
+                <div class="label">Kapasitas maksimal/hari</div>
+                <div class="num" id="rKeringMax">0<span class="unit">load</span></div>
+              </div>
+            </div>
+            <div class="scale-table">
+              <div class="scale-row highlight"><span class="k">Load per hari (setelah okupansi)</span><span class="v" id="rKeringHari">0 load</span></div>
+              <div class="scale-row"><span class="k">Load per minggu</span><span class="v" id="rKeringMinggu">0 load</span></div>
+              <div class="scale-row"><span class="k">Load per bulan</span><span class="v" id="rKeringBulan">0 load</span></div>
+            </div>
+            <div class="group-divider">Rincian unit</div>
+            <div class="machine-summary-list" id="rKeringDetail"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="screen" id="screenForm">
+      <div class="layout-grid">
+        <div class="col-input">
+
+          <section class="panel" data-panel="profil">
+            <div class="panel-head" onclick="togglePanel(this)">
+              <span class="idx">01</span>
+              <h2>Profil &amp; jam operasional</h2>
+              <span class="chev">&#9660;</span>
+            </div>
+            <div class="panel-body">
+              <div class="field">
+                <label for="namaLaundry">Nama cabang / laundry</label>
+                <input type="text" id="namaLaundry" placeholder="Contoh: Cabang Sudirman">
+              </div>
+              <div class="row2">
+                <div class="field">
+                  <label>Jam buka</label>
+                  <div class="time-picker-row">
+                    <select id="jamBukaJam"></select>
+                    <span class="colon">.</span>
+                    <select id="jamBukaMenit"></select>
+                  </div>
+                </div>
+                <div class="field">
+                  <label>Jam tutup</label>
+                  <div class="time-picker-row">
+                    <select id="jamTutupJam"></select>
+                    <span class="colon">.</span>
+                    <select id="jamTutupMenit"></select>
+                  </div>
+                </div>
+              </div>
+              <div class="duration-readout" id="durasiReadout">
+                <span>-- jam operasional</span>
+                <span>-- menit</span>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel" data-panel="cuci">
+            <div class="panel-head" onclick="togglePanel(this)">
+              <span class="idx">02</span>
+              <h2>Mesin cuci</h2>
+              <span class="chev">&#9660;</span>
+            </div>
+            <div class="panel-body">
+              <div class="machine-list" id="mesinCuciList"></div>
+              <div class="empty-hint" id="mesinCuciEmpty">Belum ada mesin cuci. Tambahkan baris pertama.</div>
+              <button class="add-btn" onclick="addMachine('mesinCuci')">+ Tambah mesin cuci</button>
+            </div>
+          </section>
+
+          <section class="panel" data-panel="kering">
+            <div class="panel-head" onclick="togglePanel(this)">
+              <span class="idx">03</span>
+              <h2>Mesin pengering</h2>
+              <span class="chev">&#9660;</span>
+            </div>
+            <div class="panel-body">
+              <div class="machine-list" id="mesinPengeringList"></div>
+              <div class="empty-hint" id="mesinPengeringEmpty">Belum ada mesin pengering. Tambahkan baris pertama.</div>
+              <button class="add-btn" onclick="addMachine('mesinPengering')">+ Tambah mesin pengering</button>
+            </div>
+          </section>
+
+          <section class="panel" data-panel="okupansi">
+            <div class="panel-head" onclick="togglePanel(this)">
+              <span class="idx">04</span>
+              <h2>Okupansi &amp; kategori layanan</h2>
+              <span class="chev">&#9660;</span>
+            </div>
+            <div class="panel-body">
+              <div class="meter-block">
+                <div class="meter-label-row">
+                  <span class="name">Okupansi mesin cuci</span>
+                  <span class="val" id="cuciPersenVal">70%</span>
+                </div>
+                <input type="range" id="cuciPersen" min="0" max="100" step="5" value="70">
+              </div>
+              <div class="meter-block">
+                <div class="meter-label-row">
+                  <span class="name">Okupansi mesin pengering</span>
+                  <span class="val" id="keringPersenVal">70%</span>
+                </div>
+                <input type="range" id="keringPersen" min="0" max="100" step="5" value="70">
+              </div>
+
+              <div class="group-divider">Kategori layanan</div>
+              <div class="pill-group" id="kategoriPills">
+                <div class="pill active" data-val="self_service">Self Service</div>
+                <div class="pill disabled" data-val="drop_off" title="Segera hadir">Drop off / kiloan</div>
+                <div class="pill disabled" data-val="hybrid" title="Segera hadir">Hybrid</div>
+              </div>
+            </div>
+          </section>
+
+        </div>
+
+        <div class="col-output">
+          <section class="summary-panel">
+            <div class="summary-section-label">Pratinjau kapasitas cuci</div>
+            <div class="stat-grid">
+              <div class="stat-card">
+                <div class="label">Total unit</div>
+                <div class="num" id="outCuciUnit">0</div>
+              </div>
+              <div class="stat-card brass">
+                <div class="label">Maksimal/hari</div>
+                <div class="num" id="outCuciMax">0<span class="unit">load</span></div>
+              </div>
+            </div>
+            <div class="scale-table">
+              <div class="scale-row"><span class="k">Load per hari</span><span class="v" id="outCuciHari">0 load</span></div>
+              <div class="scale-row"><span class="k">Load per minggu</span><span class="v" id="outCuciMinggu">0 load</span></div>
+              <div class="scale-row"><span class="k">Load per bulan</span><span class="v" id="outCuciBulan">0 load</span></div>
+            </div>
+          </section>
+
+          <section class="summary-panel">
+            <div class="summary-section-label">Pratinjau kapasitas pengering</div>
+            <div class="stat-grid">
+              <div class="stat-card">
+                <div class="label">Total unit</div>
+                <div class="num" id="outKeringUnit">0</div>
+              </div>
+              <div class="stat-card brass">
+                <div class="label">Maksimal/hari</div>
+                <div class="num" id="outKeringMax">0<span class="unit">load</span></div>
+              </div>
+            </div>
+            <div class="scale-table">
+              <div class="scale-row"><span class="k">Load per hari</span><span class="v" id="outKeringHari">0 load</span></div>
+              <div class="scale-row"><span class="k">Load per minggu</span><span class="v" id="outKeringMinggu">0 load</span></div>
+              <div class="scale-row"><span class="k">Load per bulan</span><span class="v" id="outKeringBulan">0 load</span></div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================
+         LAYAR: MASTER BIAYA — pilih kategori (saat ini hanya Gas aktif)
+    =================================================================== -->
+    <section class="screen" id="screenMasterBiaya">
+      <div class="list-header">
+        <h1>Master Biaya</h1>
+      </div>
+      <div class="group-divider">Kategori biaya</div>
+      <div class="pill-group" id="kategoriBiayaPills" style="margin-bottom: 18px;">
+        <div class="pill active flame" data-val="gas" onclick="selectKategoriBiaya('gas')">Gas</div>
+        <div class="pill volt" data-val="listrik" onclick="selectKategoriBiaya('listrik')">Listrik</div>
+        <div class="pill disabled" title="Segera hadir">Air</div>
+        <div class="pill disabled" title="Segera hadir">Deterjen</div>
+      </div>
+
+      <div class="group-divider">Pilih cabang</div>
+      <div id="biayaPickCabangList"></div>
+      <div id="biayaPickCabangEmpty" class="empty-state" style="display:none;">
+        <div class="icon">&#127981;</div>
+        <p>Belum ada cabang. Tambahkan cabang dulu di menu "Cabang &amp; lokasi" sebelum mengisi Master Biaya.</p>
+      </div>
+    </section>
+
+    <!-- ===================================================================
+         LAYAR: DAFTAR BIAYA GAS milik satu cabang
+    =================================================================== -->
+    <section class="screen" id="screenGasList">
+      <div class="list-header">
+        <h1 id="gasListTitle">Analisa Biaya Gas</h1>
+        <span class="count" id="gasListCount">0 data</span>
+      </div>
+      <div id="gasListEmpty" class="empty-state" style="display:none;">
+        <div class="icon">&#128293;</div>
+        <p>Belum ada data biaya gas untuk cabang ini.<br>Tambahkan tabung pertama untuk mulai menghitung.</p>
+      </div>
+      <div class="gas-grid" id="gasList"></div>
+      <button class="add-cabang-btn flame" onclick="openGasFormNew()">+ Tambah data gas</button>
+    </section>
+
+    <!-- ===================================================================
+         LAYAR: FORM TAMBAH/EDIT BIAYA GAS
+    =================================================================== -->
+    <section class="screen" id="screenGasForm">
+      <section class="panel" data-panel="gas">
+        <div class="panel-head">
+          <h2 id="gasFormTitle">Analisa Biaya Gas</h2>
+        </div>
+        <div class="panel-body">
+
+          <div class="field">
+            <label>Kapasitas Gas LPG</label>
+            <div class="pill-group" id="gasKapasitasPills"></div>
+          </div>
+
+          <div class="field" id="gasKapasitasCustomField" style="display:none;">
+            <label for="gasKapasitasCustomKg">Kapasitas custom (Kg)</label>
+            <input type="number" inputmode="decimal" min="0" step="0.1" id="gasKapasitasCustomKg" placeholder="Contoh: 22">
+          </div>
+
+          <div class="field">
+            <label for="gasHarga">Harga per tabung (Rp)</label>
+            <input type="number" inputmode="decimal" min="0" step="0.01" id="gasHarga" placeholder="Contoh: 21000.50">
+          </div>
+
+          <div class="field">
+            <label for="gasEstimasiJam">Estimasi pemakaian (jam)</label>
+            <input type="number" inputmode="decimal" min="0" step="0.1" id="gasEstimasiJam" placeholder="Contoh: 32">
+            <div class="field-hint">Boleh diubah sesuai pengalaman pemakaian outlet ini. Nilai di atas hanya saran awal per kapasitas.</div>
+          </div>
+
+          <div class="field">
+            <label for="gasDryerRef">Acuan mesin pengering (untuk konversi load)</label>
+            <select id="gasDryerRef"></select>
+            <div class="field-hint">Durasi 1 load diambil dari mesin pengering ini, sesuai data profil cabang.</div>
+          </div>
+
+          <div class="group-divider">Hasil otomatis</div>
+          <div class="gas-card-result" style="border-top:none; padding-top:0; margin-top:0;">
+            <div class="gas-result-grid">
+              <div class="gas-result-cell">
+                <div class="label">Konversi waktu</div>
+                <div class="val" id="gfKonversiMenit">0<span class="unit">menit</span></div>
+              </div>
+              <div class="gas-result-cell">
+                <div class="label">Estimasi load pemakaian</div>
+                <div class="val" id="gfEstimasiLoad">0<span class="unit">load</span></div>
+              </div>
+            </div>
+            <div class="gas-result-grid">
+              <div class="gas-result-cell">
+                <div class="label">Biaya per jam</div>
+                <div class="val" id="gfBiayaJam">Rp 0</div>
+              </div>
+              <div class="gas-result-cell">
+                <div class="label">Biaya per menit</div>
+                <div class="val" id="gfBiayaMenit">Rp 0</div>
+              </div>
+            </div>
+            <div class="gas-result-grid" style="grid-template-columns: 1fr;">
+              <div class="gas-result-cell highlight">
+                <div class="label">Biaya per load (sesuai profil operasional)</div>
+                <div class="val" id="gfBiayaLoad">Rp 0</div>
+              </div>
+            </div>
+            <div class="gas-warning" id="gfWarning" style="display:none;"></div>
+          </div>
+
+        </div>
+      </section>
+    </section>
+
+    <!-- ===================================================================
+         LAYAR: ANALISA BIAYA LISTRIK (satu konfigurasi per cabang)
+    =================================================================== -->
+    <section class="screen" id="screenListrikForm">
+      <div class="list-header">
+        <h1 id="listrikTitle">Analisa Biaya Listrik</h1>
+      </div>
+
+      <div class="tdl-panel">
+        <label for="listrikTdl">Tarif Dasar Listrik (TDL) per kWh (Rp)</label>
+        <div class="tdl-input-row" style="margin-top:8px;">
+          <span class="prefix">Rp</span>
+          <input type="number" inputmode="decimal" min="0" step="0.01" id="listrikTdl" placeholder="1700">
+        </div>
+        <div class="field-hint">Bisa diubah menyesuaikan golongan daya listrik laundry Anda.</div>
+      </div>
+
+      <div class="listrik-kategori-grid">
+        <div class="listrik-kategori-card">
+          <div class="listrik-kategori-top">
+            <div class="title-group" style="display:flex;align-items:center;gap:8px;">
+              <span class="listrik-kategori-icon cuci">&#128167;</span>
+              <span class="name cuci">Mesin Cuci</span>
+            </div>
+          </div>
+          <label for="listrikWattCuci">Daya / mesin (Watt)</label>
+          <input type="number" inputmode="decimal" min="0" step="1" id="listrikWattCuci" placeholder="450">
+          <div class="listrik-rincian-list" id="listrikRincianCuci"></div>
+        </div>
+
+        <div class="listrik-kategori-card">
+          <div class="listrik-kategori-top">
+            <div class="title-group" style="display:flex;align-items:center;gap:8px;">
+              <span class="listrik-kategori-icon kering">&#128168;</span>
+              <span class="name kering">Mesin Pengering</span>
+            </div>
+          </div>
+          <label for="listrikWattKering">Daya / mesin (Watt)</label>
+          <input type="number" inputmode="decimal" min="0" step="1" id="listrikWattKering" placeholder="448">
+          <div class="listrik-rincian-list" id="listrikRincianKering"></div>
+        </div>
+
+        <div class="listrik-kategori-card full">
+          <div class="listrik-kategori-top">
+            <div class="title-group" style="display:flex;align-items:center;gap:8px;">
+              <span class="listrik-kategori-icon pompa">&#127754;</span>
+              <span class="name pompa">Pompa Air</span>
+            </div>
+          </div>
+          <label for="listrikWattPompa">Daya total pompa (Watt)</label>
+          <input type="number" inputmode="decimal" min="0" step="1" id="listrikWattPompa" placeholder="280">
+          <div class="field-hint" id="listrikPompaHint">Dialokasikan rata ke setiap mesin cuci yang ada di profil cabang ini.</div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<div class="footer-bar" id="footerBar" style="display:none;">
+  <div class="wrap-inner" id="footerContent"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-box">
+    <h3 id="confirmTitle">Hapus cabang ini?</h3>
+    <p id="confirmText">Data operasional cabang ini akan dihapus permanen dan tidak bisa dikembalikan.</p>
+    <div class="confirm-actions">
+      <button class="btn-secondary" onclick="closeConfirm()">Batal</button>
+      <button class="btn-primary" style="background:var(--red); color:#fff;" id="confirmDeleteBtn">Hapus</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  /**
+   * =========================================================================
+   * STATE NAVIGASI
+   * -------------------------------------------------------------------------
+   * "view" menyimpan SELURUH konteks navigasi saat ini. Ditambah field baru
+   * untuk Master Biaya (gasCabangId, gasEditingId, gasIsNew) tanpa mengubah
+   * field cabang yang sudah ada, supaya alur cabang tidak ikut berubah.
+   * =========================================================================
+   */
+  var view = {
+    screen: "menu",
+    editingId: null,
+    isNew: false,
+    kategoriBiayaAktif: "gas", // "gas" | "listrik" — menentukan tujuan saat pilih cabang di screenMasterBiaya
+    gasCabangId: null,
+    gasEditingId: null,
+    gasIsNew: false,
+    listrikCabangId: null,
+  };
+  var cabangListCache = [];
+  var formState = null;
+
+  // Cache khusus Master Biaya Gas, diisi tiap kali masuk ke screenGasList.
+  var gasCabangCache = null;   // { id, namaLaundry, mesinPengering }
+  var gasItemsCache = [];      // [{ record, summary }]
+  var gasFormState = null;     // record biayaGas yang sedang diedit/dibuat
+
+  // Cache khusus Master Biaya Listrik, diisi tiap kali masuk ke screenListrikForm.
+  var listrikCabangCache = null; // { id, namaLaundry, mesinCuci, mesinPengering }
+  var listrikFormState = null;   // record biayaListrik yang sedang diedit (selalu 1 per cabang)
+
+  var localIdCounter = 0;
+  function localId() {
+    localIdCounter += 1;
+    return "local_" + Date.now() + "_" + localIdCounter;
+  }
+
+  function round2(n) {
+    if (!isFinite(n)) return 0;
+    return Math.round((n + Number.EPSILON) * 100) / 100;
+  }
+  function formatNum(n) {
+    return round2(n).toLocaleString("id-ID", { maximumFractionDigits: 1 });
+  }
+  function formatRupiah(n) {
+    var v = isFinite(n) ? n : 0;
+    return "Rp " + v.toLocaleString("id-ID", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+  function pad2(n) { return n < 10 ? "0" + n : String(n); }
+
+  function showToast(message, kind) {
+    var el = document.getElementById("toast");
+    el.textContent = message;
+    el.className = "toast show" + (kind ? " " + kind : "");
+    window.clearTimeout(showToast._t);
+    showToast._t = window.setTimeout(function () { el.className = "toast"; }, 3200);
+  }
+  function setSaveStatus(text, kind) {
+    var el = document.getElementById("saveStatus");
+    el.textContent = text;
+    el.className = "save-status" + (kind ? " " + kind : "");
+  }
+
+  /**
+   * handleBackendError adalah SATU-SATUNYA tempat error dari google.script.run
+   * ditampilkan ke user. "stage" dari backend (lihat Code.gs errorResponse_)
+   * disisipkan ke console.error agar saat debugging, pengembang tinggal buka
+   * console browser dan langsung tahu fungsi+titik gagalnya tanpa reproduce.
+   */
+  function handleBackendError(res, actionLabel) {
+    var msg = (res && res.error) ? res.error : "Terjadi kesalahan tidak dikenal.";
+    var stage = (res && res.stage) ? res.stage : "unknown_stage";
+    console.error("[Kalkulator Laundry] Gagal " + actionLabel + " (stage: " + stage + "): " + msg);
+    showToast("Gagal " + actionLabel + ": " + msg, "err");
+    setSaveStatus("Gagal", "err");
+  }
+
+  function computeDurasiOperasional(bukaMenit, tutupMenit) {
+    var total = (Number(tutupMenit) || 0) - (Number(bukaMenit) || 0);
+    if (total < 0) total += 24 * 60;
+    return total;
+  }
+
+  function computeGroupLoad(rows, totalMenitPerHari, okupansiPersen) {
+    var totalUnit = 0;
+    var maksimalLoadPerHari = 0;
+    for (var i = 0; i < rows.length; i++) {
+      var m = rows[i];
+      var unit = Number(m.jumlahUnit) || 0;
+      totalUnit += unit;
+      var durasi = Number(m.durasiMenit) || 0;
+      if (durasi > 0 && unit > 0 && totalMenitPerHari > 0) {
+        var loadPerUnitPerHari = totalMenitPerHari / durasi;
+        maksimalLoadPerHari += loadPerUnitPerHari * unit;
+      }
+    }
+    var fraksi = Math.min(Math.max(Number(okupansiPersen) || 0, 0), 100) / 100;
+    var loadPerHari = maksimalLoadPerHari * fraksi;
+    return {
+      totalUnit: totalUnit,
+      loadMaksimalPerHari: round2(maksimalLoadPerHari),
+      loadPerHari: round2(loadPerHari),
+      loadPerMinggu: round2(loadPerHari * 7),
+      loadPerBulan: round2(loadPerHari * 30)
+    };
+  }
+
+  function computeSummary(cabang) {
+    var totalMenit = computeDurasiOperasional(cabang.profil.jamBukaMenit, cabang.profil.jamTutupMenit);
+    return {
+      totalMenitPerHari: totalMenit,
+      totalJamPerHari: round2(totalMenit / 60),
+      cuci: computeGroupLoad(cabang.mesinCuci, totalMenit, cabang.okupansi.cuciPersen),
+      kering: computeGroupLoad(cabang.mesinPengering, totalMenit, cabang.okupansi.keringPersen)
+    };
+  }
+
+  /**
+   * Salinan rumus computeBiayaGasSummary_ dari Code.gs, untuk pratinjau
+   * instan di form (tanpa menunggu roundtrip ke server). Backend tetap
+   * sumber kebenaran tunggal saat data disimpan — lihat catatan di Code.gs.
+   */
+  function computeBiayaGasSummaryClient(record, dryer) {
+    var durasiLoadMenit = dryer ? (Number(dryer.durasiMenit) || 0) : 0;
+    var estimasiJam = Number(record.estimasiPemakaianJam) || 0;
+    var harga = Number(record.hargaPerTabung) || 0;
+
+    var konversiMenit = round2(estimasiJam * 60);
+    var estimasiLoadPemakaian = (durasiLoadMenit > 0) ? round2(konversiMenit / durasiLoadMenit) : 0;
+    var biayaPerJam = (estimasiJam > 0) ? round2(harga / estimasiJam) : 0;
+    var biayaPerMenit = round2(biayaPerJam / 60);
+    var biayaPerLoad = (estimasiLoadPemakaian > 0) ? round2(harga / estimasiLoadPemakaian) : 0;
+
+    return {
+      konversiMenit: konversiMenit,
+      estimasiLoadPemakaian: estimasiLoadPemakaian,
+      biayaPerJam: biayaPerJam,
+      biayaPerMenit: biayaPerMenit,
+      biayaPerLoad: biayaPerLoad,
+      statusValid: durasiLoadMenit > 0
+    };
+  }
+
+  function formatJam(menit) {
+    var h = Math.floor(menit / 60);
+    var m = menit % 60;
+    return pad2(h) + "." + pad2(m);
+  }
+
+  var KATEGORI_LABEL = { self_service: "Self Service", drop_off: "Drop off / kiloan", hybrid: "Hybrid" };
+  var JENIS_MESIN_LABEL = { rumah_tangga: "Rumah tangga", konversi: "Konversi", komersial: "Komersial" };
+
+  function machineDisplayName(m) {
+    var jenis = JENIS_MESIN_LABEL[m.jenis] || "Mesin";
+    return jenis + " · " + (m.durasiMenit || 0) + " mnt";
+  }
+
+  var BIAYA_GAS_PRESET = [
+    { kapasitasKg: 3, label: "3 Kg", estimasiJam: 8 },
+    { kapasitasKg: 5.5, label: "5,5 Kg", estimasiJam: 14.4 },
+    { kapasitasKg: 12, label: "12 Kg", estimasiJam: 32 },
+    { kapasitasKg: 50, label: "50 Kg", estimasiJam: 132 }
+  ];
+
+  /**
+   * =========================================================================
+   * NAVIGASI ANTAR LAYAR
+   * -------------------------------------------------------------------------
+   * SCREEN_STACK mendefinisikan "induk" tiap layar untuk tombol Kembali (←).
+   * Ditambah entri untuk layar Master Biaya tanpa mengubah entri yang sudah
+   * ada (list/ringkasan/form tetap balik ke "list" atau parent masing-masing).
+   * =========================================================================
+   */
+  var SCREEN_ELEMENT_ID = {
+    menu: "screenMenu",
+    list: "screenList",
+    ringkasan: "screenRingkasan",
+    form: "screenForm",
+    masterBiaya: "screenMasterBiaya",
+    gasList: "screenGasList",
+    gasForm: "screenGasForm",
+    listrikForm: "screenListrikForm"
+  };
+
+  function showScreen(name) {
+    view.screen = name;
+    Object.keys(SCREEN_ELEMENT_ID).forEach(function (key) {
+      document.getElementById(SCREEN_ELEMENT_ID[key]).classList.remove("active");
+    });
+    document.getElementById(SCREEN_ELEMENT_ID[name]).classList.add("active");
+    document.getElementById("backBtn").style.display = (name === "menu") ? "none" : "flex";
+    renderFooter();
+  }
+
+  window.goBack = function () {
+    switch (view.screen) {
+      case "list":
+      case "masterBiaya":
+        showScreen("menu");
+        break;
+      case "ringkasan":
+      case "form":
+        goBackToList();
+        break;
+      case "gasList":
+        showScreen("masterBiaya");
+        refreshBiayaPickCabangList();
+        break;
+      case "gasForm":
+        if (view.gasCabangId) { openGasList(view.gasCabangId); }
+        else { showScreen("masterBiaya"); }
+        break;
+      case "listrikForm":
+        showScreen("masterBiaya");
+        refreshBiayaPickCabangList();
+        break;
+      default:
+        showScreen("menu");
+    }
+  };
+
+  window.openScreenCabangList = function () {
+    showScreen("list");
+    refreshList();
+  };
+
+  window.openScreenMasterBiaya = function () {
+    showScreen("masterBiaya");
+    refreshBiayaPickCabangList();
+  };
+
+  function renderFooter() {
+    var bar = document.getElementById("footerBar");
+    var content = document.getElementById("footerContent");
+    content.innerHTML = "";
+
+    if (view.screen === "menu" || view.screen === "list" || view.screen === "masterBiaya" || view.screen === "gasList") {
+      bar.style.display = "none";
+      return;
+    }
+
+    if (view.screen === "ringkasan") {
+      bar.style.display = "flex";
+      var delBtn = document.createElement("button");
+      delBtn.className = "btn-danger";
+      delBtn.setAttribute("aria-label", "Hapus cabang");
+      delBtn.innerHTML = "&#128465;";
+      delBtn.onclick = function () { openConfirmDelete(view.editingId); };
+
+      var editBtn = document.createElement("button");
+      editBtn.className = "btn-primary";
+      editBtn.style.flex = "1";
+      editBtn.textContent = "Edit data";
+      editBtn.onclick = function () { openFormEdit(view.editingId); };
+
+      content.appendChild(delBtn);
+      content.appendChild(editBtn);
+      return;
+    }
+
+    if (view.screen === "form") {
+      bar.style.display = "flex";
+      var cancelBtn = document.createElement("button");
+      cancelBtn.className = "btn-secondary";
+      cancelBtn.textContent = "Batal";
+      cancelBtn.onclick = function () {
+        if (view.isNew) { showScreen("list"); refreshList(); }
+        else { openRingkasan(view.editingId); }
+      };
+
+      var saveBtn = document.createElement("button");
+      saveBtn.className = "btn-primary";
+      saveBtn.id = "saveBtn";
+      saveBtn.textContent = view.isNew ? "Simpan cabang baru" : "Simpan perubahan";
+      saveBtn.onclick = saveForm;
+
+      content.appendChild(cancelBtn);
+      content.appendChild(saveBtn);
+      return;
+    }
+
+    if (view.screen === "gasForm") {
+      bar.style.display = "flex";
+
+      var gasCancelBtn = document.createElement("button");
+      gasCancelBtn.className = "btn-secondary";
+      gasCancelBtn.textContent = "Batal";
+      gasCancelBtn.onclick = function () { openGasList(view.gasCabangId); };
+
+      var gasSaveBtn = document.createElement("button");
+      gasSaveBtn.className = "btn-primary flame";
+      gasSaveBtn.id = "gasSaveBtn";
+      gasSaveBtn.textContent = view.gasIsNew ? "Simpan data gas" : "Simpan perubahan";
+      gasSaveBtn.onclick = saveGasForm;
+
+      content.appendChild(gasCancelBtn);
+      content.appendChild(gasSaveBtn);
+      return;
+    }
+
+    if (view.screen === "listrikForm") {
+      bar.style.display = "flex";
+
+      var listrikCancelBtn = document.createElement("button");
+      listrikCancelBtn.className = "btn-secondary";
+      listrikCancelBtn.textContent = "Batal";
+      listrikCancelBtn.onclick = function () {
+        showScreen("masterBiaya");
+        refreshBiayaPickCabangList();
+      };
+
+      var listrikSaveBtn = document.createElement("button");
+      listrikSaveBtn.className = "btn-primary volt";
+      listrikSaveBtn.id = "listrikSaveBtn";
+      listrikSaveBtn.textContent = "Simpan perubahan";
+      listrikSaveBtn.onclick = saveListrikFormManual;
+
+      content.appendChild(listrikCancelBtn);
+      content.appendChild(listrikSaveBtn);
+      return;
+    }
+  }
+
+  window.goBackToList = function () {
+    showScreen("list");
+    refreshList();
+  };
+
+  function refreshList() {
+    document.getElementById("cabangCount").textContent = "memuat...";
+    google.script.run
+      .withSuccessHandler(function (res) {
+        if (!res || !res.ok) { handleBackendError(res, "memuat daftar cabang"); return; }
+        cabangListCache = res.data;
+        renderList();
+      })
+      .withFailureHandler(function (err) {
+        handleBackendError({ error: err && err.message ? err.message : String(err), stage: "client:listCabang" }, "memuat daftar cabang");
+      })
+      .listCabang();
+  }
+
+  function renderList() {
+    var listEl = document.getElementById("cabangList");
+    var emptyEl = document.getElementById("cabangListEmpty");
+    var countEl = document.getElementById("cabangCount");
+
+    countEl.textContent = cabangListCache.length + " cabang";
+    listEl.innerHTML = "";
+
+    if (cabangListCache.length === 0) { emptyEl.style.display = "block"; return; }
+    emptyEl.style.display = "none";
+
+    cabangListCache.forEach(function (item) {
+      var card = document.createElement("div");
+      card.className = "cabang-card";
+      card.onclick = function () { openRingkasan(item.id); };
+
+      var namaSafe = item.namaLaundry || "(Tanpa nama)";
+      var totalMenit = computeDurasiOperasional(item.jamBukaMenit, item.jamTutupMenit);
+      var jamText = formatJam(item.jamBukaMenit) + "-" + formatJam(item.jamTutupMenit) +
+        " (" + formatNum(totalMenit / 60) + " jam)";
+      var layananText = KATEGORI_LABEL[item.kategoriLayanan] || "-";
+
+      card.innerHTML =
+        "<div class=\"cabang-card-top\">" +
+          "<h3>" + escapeHtml(namaSafe) + "</h3>" +
+          "<span class=\"arrow\">&#8594;</span>" +
+        "</div>" +
+        "<div class=\"cabang-card-meta\">" +
+          "<div class=\"meta-row\"><span class=\"meta-label\">Jam operasional</span><span class=\"meta-val\">" + escapeHtml(jamText) + "</span></div>" +
+          "<div class=\"meta-row\"><span class=\"meta-label\">Layanan</span><span class=\"meta-val\">" + escapeHtml(layananText) + "</span></div>" +
+        "</div>" +
+        "<div class=\"cabang-card-stats\">" +
+          "<div class=\"mini-stat\"><div class=\"label\">Kap cuci / hari</div><div class=\"num\">" + formatNum(item.summary.cuci.loadPerHari) + "<span class=\"unit\"> load</span></div></div>" +
+          "<div class=\"mini-stat\"><div class=\"label\">Kering / hari</div><div class=\"num\">" + formatNum(item.summary.kering.loadPerHari) + "<span class=\"unit\"> load</span></div></div>" +
+        "</div>";
+      listEl.appendChild(card);
+    });
+  }
+
+  function escapeHtml(s) {
+    var div = document.createElement("div");
+    div.textContent = s;
+    return div.innerHTML;
+  }
+
+  function openRingkasan(id) {
+    showScreen("ringkasan");
+    view.editingId = id;
+    renderRingkasanLoading();
+
+    google.script.run
+      .withSuccessHandler(function (res) {
+        if (!res || !res.ok) {
+          handleBackendError(res, "memuat ringkasan cabang");
+          showScreen("list");
+          refreshList();
+          return;
+        }
+        renderRingkasan(res.data.cabang, res.data.summary);
+      })
+      .withFailureHandler(function (err) {
+        handleBackendError({ error: err && err.message ? err.message : String(err), stage: "client:getCabang" }, "memuat ringkasan cabang");
+        showScreen("list");
+        refreshList();
+      })
+      .getCabang(id);
+  }
+
+  function renderRingkasanLoading() {
+    document.getElementById("rNamaLaundry").textContent = "Memuat...";
+    document.getElementById("rJamOperasional").textContent = "-";
+    document.getElementById("rKategoriLayanan").textContent = "-";
+  }
+
+  function renderRingkasan(cabang, summary) {
+    document.getElementById("rNamaLaundry").textContent = cabang.profil.namaLaundry || "(Tanpa nama)";
+    document.getElementById("rJamOperasional").textContent =
+      formatJam(cabang.profil.jamBukaMenit) + " - " + formatJam(cabang.profil.jamTutupMenit) +
+      " (" + formatNum(summary.totalJamPerHari) + " jam)";
+    document.getElementById("rKategoriLayanan").textContent = KATEGORI_LABEL[cabang.kategoriLayanan] || "-";
+
+    document.getElementById("rCuciUnit").textContent = summary.cuci.totalUnit;
+    document.getElementById("rCuciMax").innerHTML = formatNum(summary.cuci.loadMaksimalPerHari) + "<span class=\"unit\">load</span>";
+    document.getElementById("rCuciHari").textContent = formatNum(summary.cuci.loadPerHari) + " load";
+    document.getElementById("rCuciMinggu").textContent = formatNum(summary.cuci.loadPerMinggu) + " load";
+    document.getElementById("rCuciBulan").textContent = formatNum(summary.cuci.loadPerBulan) + " load";
+    renderMachineSummaryDetail("rCuciDetail", cabang.mesinCuci, "rumah_tangga", "Rumah tangga", "komersial", "Komersial");
+
+    document.getElementById("rKeringUnit").textContent = summary.kering.totalUnit;
+    document.getElementById("rKeringMax").innerHTML = formatNum(summary.kering.loadMaksimalPerHari) + "<span class=\"unit\">load</span>";
+    document.getElementById("rKeringHari").textContent = formatNum(summary.kering.loadPerHari) + " load";
+    document.getElementById("rKeringMinggu").textContent = formatNum(summary.kering.loadPerMinggu) + " load";
+    document.getElementById("rKeringBulan").textContent = formatNum(summary.kering.loadPerBulan) + " load";
+    renderMachineSummaryDetail("rKeringDetail", cabang.mesinPengering, "konversi", "Konversi", "komersial", "Komersial");
+
+    renderFooter();
+  }
+
+  function renderMachineSummaryDetail(containerId, rows, val1, label1, val2, label2) {
+    var el = document.getElementById(containerId);
+    el.innerHTML = "";
+    if (rows.length === 0) {
+      el.innerHTML = "<div class=\"empty-hint\">Belum ada mesin ditambahkan.</div>";
+      return;
+    }
+    var jenisLabel = {};
+    jenisLabel[val1] = label1;
+    jenisLabel[val2] = label2;
+    rows.forEach(function (m) {
+      var row = document.createElement("div");
+      row.className = "machine-summary-row";
+      var jenisTxt = jenisLabel[m.jenis] || "Belum dipilih";
+      row.innerHTML =
+        "<span class=\"name\">" + jenisTxt + " &middot; " + (m.jumlahUnit || 0) + " unit</span>" +
+        "<span class=\"detail\">" + (m.kapasitasKg || 0) + " kg &middot; " + (m.durasiMenit || 0) + " mnt</span>";
+      el.appendChild(row);
+    });
+  }
+
+  function openConfirmDelete(id) {
+    var item = cabangListCache.find(function (x) { return x.id === id; }) ||
+      { namaLaundry: document.getElementById("rNamaLaundry").textContent };
+    document.getElementById("confirmTitle").textContent = "Hapus cabang ini?";
+    document.getElementById("confirmText").textContent =
+      "Data operasional \"" + (item.namaLaundry || "cabang ini") + "\" akan dihapus permanen dan tidak bisa dikembalikan. Semua data Master Biaya milik cabang ini ikut terhapus.";
+    document.getElementById("confirmOverlay").classList.add("show");
+
+    var btn = document.getElementById("confirmDeleteBtn");
+    btn.onclick = function () { confirmDelete(id); };
+  }
+  window.closeConfirm = function () {
+    document.getElementById("confirmOverlay").classList.remove("show");
+  };
+
+  function confirmDelete(id) {
+    var btn = document.getElementById("confirmDeleteBtn");
+    btn.disabled = true;
+    btn.textContent = "Menghapus...";
+
+    google.script.run
+      .withSuccessHandler(function (res) {
+        btn.disabled = false;
+        btn.textContent = "Hapus";
+        closeConfirm();
+        if (!res || !res.ok) { handleBackendError(res, "menghapus cabang"); return; }
+        showToast("Cabang berhasil dihapus.", "ok");
+        showScreen("list");
+        refreshList();
+      })
+      .withFailureHandler(function (err) {
+        btn.disabled = false;
+        btn.textContent = "Hapus";
+        handleBackendError({ error: err && err.message ? err.message : String(err), stage: "client:deleteCabang" }, "menghapus cabang");
+      })
+      .deleteCabang(id);
+  }
+
+  function defaultCabang() {
+    return {
+      id: null,
+      profil: { namaLaundry: "", jamBukaMenit: 8 * 60, jamTutupMenit: 21 * 60 },
+      mesinCuci: [],
+      mesinPengering: [],
+      kategoriLayanan: "self_service",
+      okupansi: { cuciPersen: 70, keringPersen: 70 },
+      createdAt: null,
+      updatedAt: null
+    };
+  }
+
+  window.openFormNew = function () {
+    view.isNew = true;
+    view.editingId = null;
+    formState = defaultCabang();
+    showScreen("form");
+    renderForm();
+    setSaveStatus("", "");
+  };
+
+  function openFormEdit(id) {
+    view.isNew = false;
+    view.editingId = id;
+    showScreen("form");
+    setSaveStatus("Memuat...", "busy");
+
+    google.script.run
+      .withSuccessHandler(function (res) {
+        if (!res || !res.ok) {
+          handleBackendError(res, "memuat data untuk diedit");
+          openRingkasan(id);
+          return;
+        }
+        formState = res.data.cabang;
+        renderForm();
+        setSaveStatus("", "");
+      })
+      .withFailureHandler(function (err) {
+        handleBackendError({ error: err && err.message ? err.message : String(err), stage: "client:getCabang" }, "memuat data untuk diedit");
+        openRingkasan(id);
+      })
+      .getCabang(id);
+  }
+  window.openFormEdit = openFormEdit;
+
+  function buildTimeOptions(selectEl, max) {
+    selectEl.innerHTML = "";
+    for (var i = 0; i < max; i++) {
+      var opt = document.createElement("option");
+      opt.value = i;
+      opt.textContent = pad2(i);
+      selectEl.appendChild(opt);
+    }
+  }
+
+  function initTimeSelects() {
+    buildTimeOptions(document.getElementById("jamBukaJam"), 24);
+    buildTimeOptions(document.getElementById("jamBukaMenit"), 60);
+    buildTimeOptions(document.getElementById("jamTutupJam"), 24);
+    buildTimeOptions(document.getElementById("jamTutupMenit"), 60);
+  }
+
+  function renderDurasiReadout() {
+    var totalMenit = computeDurasiOperasional(formState.profil.jamBukaMenit, formState.profil.jamTutupMenit);
+    var el = document.getElementById("durasiReadout");
+    if (totalMenit <= 0) {
+      el.innerHTML = "<span>Jam operasional belum valid</span>";
+      return;
+    }
+    el.innerHTML =
+      "<span>" + formatNum(totalMenit / 60) + " jam operasional / hari</span>" +
+      "<span>" + formatNum(totalMenit) + " menit</span>";
+  }
+
+  function machineRowTemplate(group, row, index) {
+    var jenisOptions = group === "mesinCuci"
+      ? [["", "Pilih jenis"], ["rumah_tangga", "Rumah tangga"], ["komersial", "Komersial"]]
+      : [["", "Pilih jenis"], ["konversi", "Konversi"], ["komersial", "Komersial"]];
+
+    var optsHtml = jenisOptions.map(function (o) {
+      var sel = (o[0] === row.jenis) ? "selected" : "";
+      return "<option value=\"" + o[0] + "\" " + sel + ">" + o[1] + "</option>";
+    }).join("");
+
+    var div = document.createElement("div");
+    div.className = "machine-row";
+    div.setAttribute("data-id", row.id);
+
+    div.innerHTML =
+      "<div class=\"machine-row-top\">" +
+        "<span class=\"tag\">unit #" + (index + 1) + "</span>" +
+        "<button class=\"icon-btn\" type=\"button\" aria-label=\"Hapus baris ini\" onclick=\"removeMachine('" + group + "','" + row.id + "')\">&#10005;</button>" +
+      "</div>" +
+      "<div class=\"machine-grid\">" +
+        "<div class=\"field\"><label>Jenis</label><select data-field=\"jenis\">" + optsHtml + "</select></div>" +
+        "<div class=\"field\"><label>Kapasitas (kg)</label><input type=\"number\" inputmode=\"decimal\" min=\"0\" step=\"0.5\" data-field=\"kapasitasKg\" value=\"" + (row.kapasitasKg || "") + "\"></div>" +
+        "<div class=\"field\"><label>Durasi (menit)</label><input type=\"number\" inputmode=\"numeric\" min=\"0\" step=\"1\" data-field=\"durasiMenit\" value=\"" + (row.durasiMenit || "") + "\"></div>" +
+        "<div class=\"field\"><label>Jumlah unit</label><input type=\"number\" inputmode=\"numeric\" min=\"0\" step=\"1\" data-field=\"jumlahUnit\" value=\"" + (row.jumlahUnit != null ? row.jumlahUnit : 1) + "\"></div>" +
+      "</div>";
+
+    div.querySelector("select[data-field='jenis']").addEventListener("change", function (e) {
+      updateMachineField(group, row.id, "jenis", e.target.value);
+    });
+    div.querySelectorAll("input[data-field]").forEach(function (input) {
+      input.addEventListener("input", function () {
+        var field = input.getAttribute("data-field");
+        updateMachineField(group, row.id, field, Number(input.value));
+      });
+    });
+    return div;
+  }
+
+  function renderMachineList(group) {
+    var listEl = document.getElementById(group === "mesinCuci" ? "mesinCuciList" : "mesinPengeringList");
+    var emptyEl = document.getElementById(group === "mesinCuci" ? "mesinCuciEmpty" : "mesinPengeringEmpty");
+    var rows = formState[group];
+    listEl.innerHTML = "";
+    if (rows.length === 0) { emptyEl.style.display = "block"; return; }
+    emptyEl.style.display = "none";
+    rows.forEach(function (row, index) { listEl.appendChild(machineRowTemplate(group, row, index)); });
+  }
+
+  function renderFormOutputs() {
+    var summary = computeSummary(formState);
+
+    document.getElementById("outCuciUnit").textContent = summary.cuci.totalUnit;
+    document.getElementById("outCuciMax").innerHTML = formatNum(summary.cuci.loadMaksimalPerHari) + "<span class=\"unit\">load</span>";
+    document.getElementById("outCuciHari").textContent = formatNum(summary.cuci.loadPerHari) + " load";
+    document.getElementById("outCuciMinggu").textContent = formatNum(summary.cuci.loadPerMinggu) + " load";
+    document.getElementById("outCuciBulan").textContent = formatNum(summary.cuci.loadPerBulan) + " load";
+
+    document.getElementById("outKeringUnit").textContent = summary.kering.totalUnit;
+    document.getElementById("outKeringMax").innerHTML = formatNum(summary.kering.loadMaksimalPerHari) + "<span class=\"unit\">load</span>";
+    document.getElementById("outKeringHari").textContent = formatNum(summary.kering.loadPerHari) + " load";
+    document.getElementById("outKeringMinggu").textContent = formatNum(summary.kering.loadPerMinggu) + " load";
+    document.getElementById("outKeringBulan").textContent = formatNum(summary.kering.loadPerBulan) + " load";
+
+    renderDurasiReadout();
+  }
+
+  function renderOkupansiUI() {
+    document.getElementById("cuciPersen").value = formState.okupansi.cuciPersen;
+    document.getElementById("cuciPersenVal").textContent = formState.okupansi.cuciPersen + "%";
+    document.getElementById("keringPersen").value = formState.okupansi.keringPersen;
+    document.getElementById("keringPersenVal").textContent = formState.okupansi.keringPersen + "%";
+  }
+
+  function renderKategoriUI() {
+    document.querySelectorAll("#kategoriPills .pill").forEach(function (p) {
+      p.classList.toggle("active", p.getAttribute("data-val") === formState.kategoriLayanan);
+    });
+  }
+
+  function renderForm() {
+    document.getElementById("namaLaundry").value = formState.profil.namaLaundry;
+    document.getElementById("jamBukaJam").value = Math.floor(formState.profil.jamBukaMenit / 60);
+    document.getElementById("jamBukaMenit").value = formState.profil.jamBukaMenit % 60;
+    document.getElementById("jamTutupJam").value = Math.floor(formState.profil.jamTutupMenit / 60);
+    document.getElementById("jamTutupMenit").value = formState.profil.jamTutupMenit % 60;
+    renderOkupansiUI();
+    renderKategoriUI();
+    renderMachineList("mesinCuci");
+    renderMachineList("mesinPengering");
+    renderFormOutputs();
+
+    document.querySelectorAll("#screenForm .panel").forEach(function (p) { p.classList.remove("collapsed"); });
+  }
+
+  function updateMachineField(group, id, field, value) {
+    var rows = formState[group];
+    for (var i = 0; i < rows.length; i++) {
+      if (rows[i].id === id) { rows[i][field] = value; break; }
+    }
+    renderFormOutputs();
+  }
+
+  window.removeMachine = function (group, id) {
+    formState[group] = formState[group].filter(function (r) { return r.id !== id; });
+    renderMachineList(group);
+    renderFormOutputs();
+  };
+
+  window.addMachine = function (group) {
+    formState[group].push({ id: localId(), jenis: "", kapasitasKg: 0, durasiMenit: 0, jumlahUnit: 1 });
+    renderMachineList(group);
+    renderFormOutputs();
+    var listEl = document.getElementById(group === "mesinCuci" ? "mesinCuciList" : "mesinPengeringList");
+    var lastRow = listEl.lastElementChild;
+    if (lastRow) {
+      var firstSelect = lastRow.querySelector("select");
+      if (firstSelect) firstSelect.focus();
+    }
+  };
+
+  window.togglePanel = function (headerEl) {
+    headerEl.closest(".panel").classList.toggle("collapsed");
+  };
+
+  function bindStaticFormInputs() {
+    document.getElementById("namaLaundry").addEventListener("input", function (e) {
+      formState.profil.namaLaundry = e.target.value;
+    });
+
+    function bindTime(idJam, idMenit, key) {
+      function update() {
+        var jam = Number(document.getElementById(idJam).value) || 0;
+        var menit = Number(document.getElementById(idMenit).value) || 0;
+        formState.profil[key] = jam * 60 + menit;
+        renderFormOutputs();
+      }
+      document.getElementById(idJam).addEventListener("change", update);
+      document.getElementById(idMenit).addEventListener("change", update);
+    }
+    bindTime("jamBukaJam", "jamBukaMenit", "jamBukaMenit");
+    bindTime("jamTutupJam", "jamTutupMenit", "jamTutupMenit");
+
+    document.getElementById("cuciPersen").addEventListener("input", function (e) {
+      formState.okupansi.cuciPersen = Number(e.target.value);
+      renderOkupansiUI();
+      renderFormOutputs();
+    });
+    document.getElementById("keringPersen").addEventListener("input", function (e) {
+      formState.okupansi.keringPersen = Number(e.target.value);
+      renderOkupansiUI();
+      renderFormOutputs();
+    });
+
+    document.getElementById("kategoriPills").querySelectorAll(".pill").forEach(function (pill) {
+      pill.addEventListener("click", function () {
+        if (pill.classList.contains("disabled")) {
+          showToast("Mode ini segera hadir. Saat ini fokus di Self Service.", "");
+          return;
+        }
+        formState.kategoriLayanan = pill.getAttribute("data-val");
+        renderKategoriUI();
+      });
+    });
+  }
+
+  function saveForm() {
+    var btn = document.getElementById("saveBtn");
+    if (btn) { btn.disabled = true; btn.textContent = "Menyimpan..."; }
+    setSaveStatus("Menyimpan...", "busy");
+
+    function onDone(res, actionLabel) {
+      if (btn) { btn.disabled = false; btn.textContent = view.isNew ? "Simpan cabang baru" : "Simpan perubahan"; }
+      if (!res || !res.ok) { handleBackendError(res, actionLabel); return; }
+      showToast("Data operasional tersimpan.", "ok");
+      setSaveStatus("Tersimpan", "ok");
+      view.editingId = res.data.cabang.id;
+      view.isNew = false;
+      renderRingkasan(res.data.cabang, res.data.summary);
+      showScreen("ringkasan");
+    }
+
+    if (view.isNew) {
+      google.script.run
+        .withSuccessHandler(function (res) { onDone(res, "menyimpan cabang baru"); })
+        .withFailureHandler(function (err) {
+          if (btn) { btn.disabled = false; btn.textContent = "Simpan cabang baru"; }
+          handleBackendError({ error: err && err.message ? err.message : String(err), stage: "client:createCabang" }, "menyimpan cabang baru");
+        })
+        .createCabang(formState);
+    } else {
+      google.script.run
+        .withSuccessHandler(function (res) { onDone(res, "menyimpan perubahan"); })
+        .withFailureHandler(function (err) {
+          if (btn) { btn.disabled = false; btn.textContent = "Simpan perubahan"; }
+          handleBackendError({ error: err && err.message ? err.message : String(err), stage: "client:updateCabang" }, "menyimpan perubahan");
+        })
+        .updateCabang(view.editingId, formState);
+    }
+  }
+
+  /**
+   * ===========================================================================
+   * SECTION: MASTER BIAYA — GAS LPG
+   * ===========================================================================
+   * Semua fungsi di bawah ini diberi prefix "gas"/"Gas" secara konsisten,
+   * supaya kalau nanti dipecah ke file Index lain (mis. MasterBiaya.html
+   * yang di-include lewat <?!= include('MasterBiaya') ?>), batasnya jelas
+   * hanya dengan mencari prefix ini.
+   * ===========================================================================
+   */
+
+  /**
+   * selectKategoriBiaya: dipanggil saat user klik pill kategori di
+   * screenMasterBiaya. Hanya menukar view.kategoriBiayaAktif dan re-render
+   * tampilan pill aktif — TIDAK perlu reload daftar cabang, karena daftar
+   * cabang sama untuk semua kategori, hanya tujuan navigasinya yang beda
+   * (lihat renderBiayaPickCabangList -> openGasList vs openListrikForm).
+   */
+  window.selectKategoriBiaya = function (kategori) {
+    view.kategoriBiayaAktif = kategori;
+    document.querySelectorAll("#kategoriBiayaPills .pill").forEach(function (p) {
+      var val = p.getAttribute("data-val");
+      if (!val) return; // pill "disabled" tanpa data-val (Air, Deterjen) dilewati
+      p.classList.toggle("active", val === kategori);
+    });
+  };
+
+  function refreshBiayaPickCabangList() {
+    var listEl = document.getElementById("biayaPickCabangList");
+    var emptyEl = document.getElementById("biayaPickCabangEmpty");
+    listEl.innerHTML = "<div class=\"empty-hint\">Memuat daftar cabang...</div>";
+    emptyEl.style.display = "none";
+
+    google.script.run
+      .withSuccessHandler(function (res) {
+        if (!res || !res.ok) { handleBackendError(res, "memuat daftar cabang"); listEl.innerHTML = ""; return; }
+        cabangListCache = res.data;
+        renderBiayaPickCabangList();
+      })
+      .withFailureHandler(function (err) {
+        handleBackendError({ error: err && err.message ? err.message : String(err), stage: "client:listCabang(masterBiaya)" }, "memuat daftar cabang");
+        listEl.innerHTML = "";
+      })
+      .listCabang();
+  }
+
+  function renderBiayaPickCabangList() {
+    var listEl = document.getElementById("biayaPickCabangList");
+    var emptyEl = document.getElementById("biayaPickCabangEmpty");
+    listEl.innerHTML = "";
+
+    if (cabangListCache.length === 0) {
+      emptyEl.style.display = "block";
+      return;
+    }
+    emptyEl.style.display = "none";
+
+    cabangListCache.forEach(function (item) {
+      var row = document.createElement("div");
+      row.className = "pick-cabang-row";
+      row.onclick = function () {
+        if (view.kategoriBiayaAktif === "listrik") { openListrikForm(item.id); }
+        else { openGasList(item.id); }
+      };
+      row.innerHTML =
+        "<span class=\"name\">" + escapeHtml(item.namaLaundry || "(Tanpa nama)") + "</span>" +
+        "<span class=\"arrow\">&#8594;</span>";
+      listEl.appendChild(row);
+    });
+  }
+
+  /**
+   * openGasList: masuk ke daftar kartu "Analisa Biaya Gas" untuk satu cabang.
+   * Memanggil listBiayaGas(cabangId) yang mengembalikan SEKALIGUS profil
+   * cabang ringkas (untuk judul + dropdown dryer) dan seluruh record gas
+   * dengan summary masing-masing — jadi cukup satu roundtrip.
+   */
+  function openGasList(cabangId) {
+    view.gasCabangId = cabangId;
+    showScreen("gasList");
+    document.getElementById("gasListTitle").textContent = "Analisa Biaya Gas";
+    document.getElementById("gasListCount").textContent = "memuat...";
+    document.getElementById("gasList").innerHTML = "";
+    document.getElementById("gasListEmpty").style.display = "none";
+
+    google.script.run
+      .withSuccessHandler(function (res) {
+        if (!res || !res.ok) {
+          handleBackendError(res, "memuat data biaya gas");
+          showScreen("masterBiaya");
+          refreshBiayaPickCabangList();
+          return;
+        }
+        gasCabangCache = res.data.cabang;
+        gasItemsCache = res.data.items;
+        document.getElementById("gasListTitle").textContent = "Analisa Biaya Gas · " + (gasCabangCache.namaLaundry || "(Tanpa nama)");
+        renderGasList();
+      })
+      .withFailureHandler(function (err) {
+        handleBackendError({ error: err && err.message ? err.message : String(err), stage: "client:listBiayaGas" }, "memuat data biaya gas");
+        showScreen("masterBiaya");
+        refreshBiayaPickCabangList();
+      })
+      .listBiayaGas(cabangId);
+  }
+  window.openGasList = openGasList;
+
+  function renderGasList() {
+    var listEl = document.getElementById("gasList");
+    var emptyEl = document.getElementById("gasListEmpty");
+    var countEl = document.getElementById("gasListCount");
+
+    countEl.textContent = gasItemsCache.length + " data";
+    listEl.innerHTML = "";
+
+    if (gasItemsCache.length === 0) {
+      emptyEl.style.display = "block";
+      return;
+    }
+    emptyEl.style.display = "none";
+
+    gasItemsCache.forEach(function (entry) {
+      var record = entry.record;
+      var summary = entry.summary;
+
+      var card = document.createElement("div");
+      card.className = "gas-card";
+
+      var warningHtml = summary.statusValid ? "" :
+        "<div class=\"gas-warning\">Mesin pengering acuan untuk data ini sudah tidak ada di profil cabang. Edit data ini dan pilih ulang acuannya.</div>";
+
+      card.innerHTML =
+        "<div class=\"gas-card-top\">" +
+          "<div class=\"title-group\">" +
+            "<span class=\"flame-dot\"></span>" +
+            "<h3>" + escapeHtml(record.kapasitasLabel) + "</h3>" +
+          "</div>" +
+          "<div class=\"actions\">" +
+            "<button class=\"icon-btn\" type=\"button\" aria-label=\"Edit\" data-action=\"edit\">&#9998;</button>" +
+            "<button class=\"icon-btn\" type=\"button\" aria-label=\"Hapus\" data-action=\"delete\">&#10005;</button>" +
+          "</div>" +
+        "</div>" +
+        "<div class=\"meta-row\"><span class=\"meta-label\">Harga per tabung</span><span class=\"meta-val\">" + formatRupiah(record.hargaPerTabung) + "</span></div>" +
+        "<div class=\"meta-row\"><span class=\"meta-label\">Estimasi pemakaian</span><span class=\"meta-val\">" + formatNum(record.estimasiPemakaianJam) + " jam</span></div>" +
+        "<div class=\"meta-row\"><span class=\"meta-label\">Acuan dryer</span><span class=\"meta-val\">" + escapeHtml(summary.dryerRefNama) + "</span></div>" +
+        "<div class=\"gas-card-result\">" +
+          "<div class=\"gas-result-grid\">" +
+            "<div class=\"gas-result-cell\"><div class=\"label\">Konversi waktu</div><div class=\"val\">" + formatNum(summary.konversiMenit) + "<span class=\"unit\">menit</span></div></div>" +
+            "<div class=\"gas-result-cell\"><div class=\"label\">Estimasi load</div><div class=\"val\">" + formatNum(summary.estimasiLoadPemakaian) + "<span class=\"unit\">load</span></div></div>" +
+          "</div>" +
+          "<div class=\"gas-result-grid\">" +
+            "<div class=\"gas-result-cell\"><div class=\"label\">Biaya / jam</div><div class=\"val\">" + formatRupiah(summary.biayaPerJam) + "</div></div>" +
+            "<div class=\"gas-result-cell\"><div class=\"label\">Biaya / menit</div><div class=\"val\">" + formatRupiah(summary.biayaPerMenit) + "</div></div>" +
+          "</div>" +
+          "<div class=\"gas-result-grid\" style=\"grid-template-columns:1fr;\">" +
+            "<div class=\"gas-result-cell highlight\"><div class=\"label\">Biaya / load (sesuai profil operasional)</div><div class=\"val\">" + formatRupiah(summary.biayaPerLoad) + "</div></div>" +
+          "</div>" +
+          warningHtml +
+        "</div>";
+
+      card.querySelector("[data-action='edit']").addEventListener("click", function () { openGasFormEdit(record.id); });
+      card.querySelector("[data-action='delete']").addEventListener("click", function () { openConfirmDeleteGas(record); });
+
+      listEl.appendChild(card);
+    });
+  }
+
+  function openConfirmDeleteGas(record) {
+    document.getElementById("confirmTitle").textContent = "Hapus data gas ini?";
+    document.getElementById("confirmText").textContent =
+      "Data biaya gas \"" + (record.kapasitasLabel || "ini") + "\" akan dihapus permanen dan tidak bisa dikembalikan.";
+    document.getElementById("confirmOverlay").classList.add("show");
+
+    var btn = document.getElementById("confirmDeleteBtn");
+    btn.onclick = function () { confirmDeleteGas(record.id); };
+  }
+
+  function confirmDeleteGas(id) {
+    var btn = document.getElementById("confirmDeleteBtn");
+    btn.disabled = true;
+    btn.textContent = "Menghapus...";
+
+    google.script.run
+      .withSuccessHandler(function (res) {
+        btn.disabled = false;
+        btn.textContent = "Hapus";
+        closeConfirm();
+        if (!res || !res.ok) { handleBackendError(res, "menghapus data gas"); return; }
+        showToast("Data gas berhasil dihapus.", "ok");
+        openGasList(view.gasCabangId);
+      })
+      .withFailureHandler(function (err) {
+        btn.disabled = false;
+        btn.textContent = "Hapus";
+        handleBackendError({ error: err && err.message ? err.message : String(err), stage: "client:deleteBiayaGas" }, "menghapus data gas");
+      })
+      .deleteBiayaGas(id);
+  }
+
+  function defaultGasRecord(cabangId) {
+    return {
+      id: null,
+      cabangId: cabangId,
+      dryerRefId: "",
+      kapasitasLabel: "",
+      kapasitasKg: 0,
+      hargaPerTabung: 0,
+      estimasiPemakaianJam: 0,
+      createdAt: null,
+      updatedAt: null
+    };
+  }
+
+  window.openGasFormNew = function () {
+    if (!gasCabangCache) { showToast("Pilih cabang terlebih dahulu.", "err"); return; }
+    view.gasIsNew = true;
+    view.gasEditingId = null;
+    gasFormState = defaultGasRecord(view.gasCabangId);
+    showScreen("gasForm");
+    document.getElementById("gasFormTitle").textContent = "Tambah Analisa Biaya Gas";
+    renderGasForm();
+    setSaveStatus("", "");
+  };
+
+  function openGasFormEdit(id) {
+    view.gasIsNew = false;
+    view.gasEditingId = id;
+    showScreen("gasForm");
+    document.getElementById("gasFormTitle").textContent = "Edit Analisa Biaya Gas";
+    setSaveStatus("Memuat...", "busy");
+
+    google.script.run
+      .withSuccessHandler(function (res) {
+        if (!res || !res.ok) {
+          handleBackendError(res, "memuat data gas untuk diedit");
+          openGasList(view.gasCabangId);
+          return;
+        }
+        gasFormState = res.data.record;
+        renderGasForm();
+        setSaveStatus("", "");
+      })
+      .withFailureHandler(function (err) {
+        handleBackendError({ error: err && err.message ? err.message : String(err), stage: "client:getBiayaGas" }, "memuat data gas untuk diedit");
+        openGasList(view.gasCabangId);
+      })
+      .getBiayaGas(id);
+  }
+
+  /**
+   * renderGasKapasitasPills membangun pilihan cepat dari BIAYA_GAS_PRESET
+   * ditambah satu pill "Custom" supaya ukuran tabung di luar daftar (mis.
+   * 22 Kg buatan sendiri) tetap bisa diinput lewat field kapasitasCustomKg.
+   */
+  function renderGasKapasitasPills() {
+    var container = document.getElementById("gasKapasitasPills");
+    container.innerHTML = "";
+
+    var matchedPreset = BIAYA_GAS_PRESET.find(function (p) { return p.label === gasFormState.kapasitasLabel; });
+    var isCustom = !matchedPreset && gasFormState.kapasitasLabel.length > 0;
+
+    BIAYA_GAS_PRESET.forEach(function (preset) {
+      var pill = document.createElement("div");
+      pill.className = "pill flame" + (gasFormState.kapasitasLabel === preset.label ? " active" : "");
+      pill.textContent = preset.label;
+      pill.addEventListener("click", function () { selectGasPreset(preset); });
+      container.appendChild(pill);
+    });
+
+    var customPill = document.createElement("div");
+    customPill.className = "pill flame" + (isCustom ? " active" : "");
+    customPill.textContent = "Custom";
+    customPill.addEventListener("click", function () { selectGasCustom(); });
+    container.appendChild(customPill);
+
+    document.getElementById("gasKapasitasCustomField").style.display = isCustom ? "block" : "none";
+    if (isCustom) {
+      document.getElementById("gasKapasitasCustomKg").value = gasFormState.kapasitasKg || "";
+    }
+  }
+
+  function selectGasPreset(preset) {
+    gasFormState.kapasitasLabel = preset.label;
+    gasFormState.kapasitasKg = preset.kapasitasKg;
+    // Hanya isi estimasi jam otomatis jika field masih kosong (0), supaya
+    // tidak menimpa angka yang sudah diubah manual oleh user saat ganti-ganti pill.
+    if (!gasFormState.estimasiPemakaianJam) {
+      gasFormState.estimasiPemakaianJam = preset.estimasiJam;
+    }
+    renderGasKapasitasPills();
+    syncGasFormFieldsFromState();
+    renderGasFormPreview();
+  }
+
+  function selectGasCustom() {
+    if (!BIAYA_GAS_PRESET.some(function (p) { return p.label === gasFormState.kapasitasLabel; })) {
+      // sudah custom, tidak ada perlu diubah selain memastikan field terbuka
+      renderGasKapasitasPills();
+      return;
+    }
+    gasFormState.kapasitasLabel = "";
+    gasFormState.kapasitasKg = 0;
+    renderGasKapasitasPills();
+    syncGasFormFieldsFromState();
+    renderGasFormPreview();
+    var input = document.getElementById("gasKapasitasCustomKg");
+    if (input) input.focus();
+  }
+
+  function renderGasDryerOptions() {
+    var select = document.getElementById("gasDryerRef");
+    select.innerHTML = "";
+
+    var dryers = (gasCabangCache && gasCabangCache.mesinPengering) || [];
+
+    if (dryers.length === 0) {
+      var opt = document.createElement("option");
+      opt.value = "";
+      opt.textContent = "Belum ada mesin pengering di profil cabang ini";
+      select.appendChild(opt);
+      select.disabled = true;
+      return;
+    }
+    select.disabled = false;
+
+    var placeholder = document.createElement("option");
+    placeholder.value = "";
+    placeholder.textContent = "Pilih mesin pengering acuan";
+    select.appendChild(placeholder);
+
+    dryers.forEach(function (m, idx) {
+      var opt = document.createElement("option");
+      opt.value = m.id;
+      opt.textContent = "Unit #" + (idx + 1) + " · " + machineDisplayName(m);
+      if (m.id === gasFormState.dryerRefId) opt.selected = true;
+      select.appendChild(opt);
+    });
+  }
+
+  function syncGasFormFieldsFromState() {
+    document.getElementById("gasHarga").value = gasFormState.hargaPerTabung || "";
+    document.getElementById("gasEstimasiJam").value = gasFormState.estimasiPemakaianJam || "";
+  }
+
+  function renderGasForm() {
+    renderGasKapasitasPills();
+    syncGasFormFieldsFromState();
+    renderGasDryerOptions();
+    renderGasFormPreview();
+  }
+
+  /**
+   * renderGasFormPreview: pratinjau real-time menggunakan dryer yang SEDANG
+   * dipilih di dropdown (mengikuti formState saat ini, bukan hasil tersimpan
+   * sebelumnya), supaya saat user ganti-ganti acuan dryer, angka di bawah
+   * langsung berubah tanpa perlu klik Simpan dulu.
+   */
+  function renderGasFormPreview() {
+    var dryers = (gasCabangCache && gasCabangCache.mesinPengering) || [];
+    var dryer = dryers.find(function (m) { return m.id === gasFormState.dryerRefId; }) || null;
+
+    var summary = computeBiayaGasSummaryClient(gasFormState, dryer);
+
+    document.getElementById("gfKonversiMenit").innerHTML = formatNum(summary.konversiMenit) + "<span class=\"unit\">menit</span>";
+    document.getElementById("gfEstimasiLoad").innerHTML = formatNum(summary.estimasiLoadPemakaian) + "<span class=\"unit\">load</span>";
+    document.getElementById("gfBiayaJam").textContent = formatRupiah(summary.biayaPerJam);
+    document.getElementById("gfBiayaMenit").textContent = formatRupiah(summary.biayaPerMenit);
+    document.getElementById("gfBiayaLoad").textContent = formatRupiah(summary.biayaPerLoad);
+
+    var warnEl = document.getElementById("gfWarning");
+    if (!dryer) {
+      warnEl.style.display = "block";
+      warnEl.textContent = "Pilih mesin pengering acuan agar estimasi load dan biaya per load bisa dihitung.";
+    } else {
+      warnEl.style.display = "none";
+    }
+  }
+
+  function bindGasFormInputs() {
+    document.getElementById("gasKapasitasCustomKg").addEventListener("input", function (e) {
+      gasFormState.kapasitasKg = Number(e.target.value) || 0;
+      if (!gasFormState.kapasitasLabel) {
+        // Label custom disusun dari angka yang diketik, supaya tetap punya
+        // identitas tampil di kartu list (mis. "22 Kg").
+      }
+      renderGasFormPreview();
+    });
+
+    document.getElementById("gasHarga").addEventListener("input", function (e) {
+      gasFormState.hargaPerTabung = Number(e.target.value) || 0;
+      renderGasFormPreview();
+    });
+
+    document.getElementById("gasEstimasiJam").addEventListener("input", function (e) {
+      gasFormState.estimasiPemakaianJam = Number(e.target.value) || 0;
+      renderGasFormPreview();
+    });
+
+    document.getElementById("gasDryerRef").addEventListener("change", function (e) {
+      gasFormState.dryerRefId = e.target.value;
+      renderGasFormPreview();
+    });
+  }
+
+  function saveGasForm() {
+    // Validasi ringan di sisi klien dulu (UX cepat), validasi penuh & otoritatif
+    // tetap di backend (validateBiayaGas_) — lihat catatan arsitektur Code.gs.
+    var isCustom = !BIAYA_GAS_PRESET.some(function (p) { return p.label === gasFormState.kapasitasLabel; });
+    if (isCustom) {
+      var customKg = Number(document.getElementById("gasKapasitasCustomKg").value) || 0;
+      if (customKg <= 0) {
+        showToast("Isi kapasitas custom (Kg) terlebih dahulu.", "err");
+        document.getElementById("gasKapasitasCustomKg").classList.add("input-err");
+        return;
+      }
+      gasFormState.kapasitasKg = customKg;
+      gasFormState.kapasitasLabel = formatNum(customKg).replace(".", ",") + " Kg";
+    }
+
+    if (!gasFormState.dryerRefId) {
+      showToast("Pilih mesin pengering acuan terlebih dahulu.", "err");
+      document.getElementById("gasDryerRef").classList.add("input-err");
+      return;
+    }
+    document.getElementById("gasDryerRef").classList.remove("input-err");
+
+    var btn = document.getElementById("gasSaveBtn");
+    if (btn) { btn.disabled = true; btn.textContent = "Menyimpan..."; }
+    setSaveStatus("Menyimpan...", "busy");
+
+    function onDone(res, actionLabel, restoreLabel) {
+      if (btn) { btn.disabled = false; btn.textContent = restoreLabel; }
+      if (!res || !res.ok) { handleBackendError(res, actionLabel); return; }
+      showToast("Data biaya gas tersimpan.", "ok");
+      setSaveStatus("Tersimpan", "ok");
+      openGasList(view.gasCabangId);
+    }
+
+    if (view.gasIsNew) {
+      google.script.run
+        .withSuccessHandler(function (res) { onDone(res, "menyimpan data gas baru", "Simpan data gas"); })
+        .withFailureHandler(function (err) {
+          if (btn) { btn.disabled = false; btn.textContent = "Simpan data gas"; }
+          handleBackendError({ error: err && err.message ? err.message : String(err), stage: "client:createBiayaGas" }, "menyimpan data gas baru");
+        })
+        .createBiayaGas(gasFormState);
+    } else {
+      google.script.run
+        .withSuccessHandler(function (res) { onDone(res, "menyimpan perubahan data gas", "Simpan perubahan"); })
+        .withFailureHandler(function (err) {
+          if (btn) { btn.disabled = false; btn.textContent = "Simpan perubahan"; }
+          handleBackendError({ error: err && err.message ? err.message : String(err), stage: "client:updateBiayaGas" }, "menyimpan perubahan data gas");
+        })
+        .updateBiayaGas(view.gasEditingId, gasFormState);
+    }
+  }
+
+  /**
+   * ===========================================================================
+   * SECTION: MASTER BIAYA — LISTRIK
+   * ===========================================================================
+   * Semua fungsi di bawah ini diberi prefix "listrik"/"Listrik" secara
+   * konsisten, mengikuti pola prefix "gas"/"Gas" di section sebelumnya.
+   *
+   * BERBEDA dari Gas: tidak ada list/create/delete multi-record. Hanya SATU
+   * layar (screenListrikForm) yang langsung berfungsi sebagai tampilan +
+   * form sekaligus (mirip gambar referensi: tidak ada mode "lihat" vs "edit"
+   * terpisah, semua field langsung bisa diketik dan hasil berubah live).
+   * ===========================================================================
+   */
+
+  var JENIS_MESIN_LABEL_CLIENT = { rumah_tangga: "Rumah tangga", konversi: "Konversi", komersial: "Komersial" };
+
+  function listrikMachineLabel(m, index) {
+    var jenis = JENIS_MESIN_LABEL_CLIENT[m.jenis] || "Mesin";
+    return "Unit #" + (index + 1) + " · " + jenis + " · " + (m.durasiMenit || 0) + " mnt";
+  }
+
+  /**
+   * Salinan rumus computeBiayaListrikSummary_ dari Code.gs, untuk pratinjau
+   * instan saat user mengetik (tanpa menunggu roundtrip ke server). Backend
+   * tetap sumber kebenaran tunggal saat data disimpan.
+   */
+  function computeBiayaListrikSummaryClient(record, cabang) {
+    var tdl = Number(record.tdlPerKwh) || 0;
+    var totalUnitCuci = 0;
+    (cabang.mesinCuci || []).forEach(function (m) { totalUnitCuci += Number(m.jumlahUnit) || 0; });
+
+    var wattPompaPerMesinCuci = (totalUnitCuci > 0) ? round2((Number(record.wattPompaAir) || 0) / totalUnitCuci) : 0;
+
+    function computeBaris(m, wattKategori, wattPompaPerMesin) {
+      var durasiMenit = Number(m.durasiMenit) || 0;
+      var kwhListrik = (wattKategori > 0 && durasiMenit > 0) ? (wattKategori * durasiMenit) / 1000 / 60 : 0;
+      var rpListrikPerLoad = round2(kwhListrik * tdl);
+      var kwhPompa = (wattPompaPerMesin > 0 && durasiMenit > 0) ? (wattPompaPerMesin * durasiMenit) / 1000 / 60 : 0;
+      var rpPompaPerLoad = round2(kwhPompa * tdl);
+      return {
+        machineId: m.id,
+        jenis: m.jenis,
+        durasiMenit: durasiMenit,
+        jumlahUnit: Number(m.jumlahUnit) || 0,
+        rpListrikPerLoad: rpListrikPerLoad,
+        rpPompaPerLoad: rpPompaPerLoad,
+        rpTotalPerLoad: round2(rpListrikPerLoad + rpPompaPerLoad),
+        statusValid: durasiMenit > 0
+      };
+    }
+
+    var cuciRincian = (cabang.mesinCuci || []).map(function (m) {
+      return computeBaris(m, Number(record.wattMesinCuci) || 0, wattPompaPerMesinCuci);
+    });
+    var pengeringRincian = (cabang.mesinPengering || []).map(function (m) {
+      return computeBaris(m, Number(record.wattMesinPengering) || 0, 0);
+    });
+
+    return {
+      totalUnitMesinCuci: totalUnitCuci,
+      wattPompaPerMesinCuci: wattPompaPerMesinCuci,
+      cuci: cuciRincian,
+      pengering: pengeringRincian
+    };
+  }
+
+  /**
+   * openListrikForm: masuk ke layar konfigurasi listrik untuk satu cabang.
+   * getBiayaListrik(cabangId) mengembalikan default (TDL 1700, watt 0) jika
+   * cabang belum pernah mengisi — BUKAN error — sehingga layar tetap mulus
+   * dibuka pertama kali.
+   */
+  function openListrikForm(cabangId) {
+    view.listrikCabangId = cabangId;
+    showScreen("listrikForm");
+    document.getElementById("listrikTitle").textContent = "Analisa Biaya Listrik";
+    setSaveStatus("Memuat...", "busy");
+
+    google.script.run
+      .withSuccessHandler(function (res) {
+        if (!res || !res.ok) {
+          handleBackendError(res, "memuat data biaya listrik");
+          showScreen("masterBiaya");
+          refreshBiayaPickCabangList();
+          return;
+        }
+        listrikCabangCache = res.data.cabang;
+        listrikFormState = res.data.record;
+        document.getElementById("listrikTitle").textContent = "Analisa Biaya Listrik · " + (listrikCabangCache.namaLaundry || "(Tanpa nama)");
+        renderListrikForm();
+        setSaveStatus("", "");
+      })
+      .withFailureHandler(function (err) {
+        handleBackendError({ error: err && err.message ? err.message : String(err), stage: "client:getBiayaListrik" }, "memuat data biaya listrik");
+        showScreen("masterBiaya");
+        refreshBiayaPickCabangList();
+      })
+      .getBiayaListrik(cabangId);
+  }
+  window.openListrikForm = openListrikForm;
+
+  function syncListrikFieldsFromState() {
+    document.getElementById("listrikTdl").value = listrikFormState.tdlPerKwh || "";
+    document.getElementById("listrikWattCuci").value = listrikFormState.wattMesinCuci || "";
+    document.getElementById("listrikWattKering").value = listrikFormState.wattMesinPengering || "";
+    document.getElementById("listrikWattPompa").value = listrikFormState.wattPompaAir || "";
+  }
+
+  function renderListrikForm() {
+    syncListrikFieldsFromState();
+    renderListrikPreview();
+  }
+
+  /**
+   * renderListrikRincian: merender daftar Rp/load per baris mesin untuk satu
+   * grup (cuci atau pengering). showPompa=true menambahkan baris kedua
+   * "+ Pompa air" di bawah tiap mesin cuci, supaya asal biaya tetap
+   * transparan (lihat dasar rumus di Code.gs computeListrikBarisMesin_).
+   */
+  function renderListrikRincian(containerId, rincianRows, machineRows, showPompa) {
+    var el = document.getElementById(containerId);
+    el.innerHTML = "";
+
+    if (rincianRows.length === 0) {
+      el.innerHTML = "<div class=\"listrik-rincian-empty\">Belum ada mesin di profil cabang ini.</div>";
+      return;
+    }
+
+    rincianRows.forEach(function (r, index) {
+      var label = listrikMachineLabel(machineRows[index], index);
+      var row = document.createElement("div");
+      row.className = "listrik-rincian-row";
+
+      if (!r.statusValid) {
+        row.innerHTML =
+          "<span class=\"k\">" + escapeHtml(label) + "</span>" +
+          "<span class=\"v muted\">durasi belum diisi</span>";
+        el.appendChild(row);
+        return;
+      }
+
+      row.innerHTML =
+        "<span class=\"k\">" + escapeHtml(label) + "</span>" +
+        "<span class=\"v\">" + formatRupiah(r.rpListrikPerLoad) + "</span>";
+      el.appendChild(row);
+
+      if (showPompa && r.rpPompaPerLoad > 0) {
+        var pompaRow = document.createElement("div");
+        pompaRow.className = "listrik-rincian-row";
+        pompaRow.innerHTML =
+          "<span class=\"k\">&nbsp;&nbsp;+ Beban pompa air</span>" +
+          "<span class=\"v muted\">" + formatRupiah(r.rpPompaPerLoad) + "</span>";
+        el.appendChild(pompaRow);
+
+        var totalRow = document.createElement("div");
+        totalRow.className = "listrik-total-bar";
+        totalRow.innerHTML =
+          "<span class=\"k\">Total / load</span>" +
+          "<span class=\"v\">" + formatRupiah(r.rpTotalPerLoad) + "</span>";
+        el.appendChild(totalRow);
+      }
+    });
+  }
+
+  /**
+   * renderListrikPreview: pratinjau real-time berdasarkan listrikFormState
+   * SAAT INI (sebelum disimpan), supaya user lihat hasil sambil mengetik.
+   */
+  function renderListrikPreview() {
+    if (!listrikCabangCache) return;
+    var summary = computeBiayaListrikSummaryClient(listrikFormState, listrikCabangCache);
+
+    renderListrikRincian("listrikRincianCuci", summary.cuci, listrikCabangCache.mesinCuci, true);
+    renderListrikRincian("listrikRincianKering", summary.pengering, listrikCabangCache.mesinPengering, false);
+
+    var hintEl = document.getElementById("listrikPompaHint");
+    if (summary.totalUnitMesinCuci > 0) {
+      hintEl.textContent = "Dialokasikan rata ke " + summary.totalUnitMesinCuci + " unit mesin cuci di profil cabang ini (≈ " + formatNum(summary.wattPompaPerMesinCuci) + " W / mesin).";
+    } else {
+      hintEl.textContent = "Belum ada mesin cuci di profil cabang ini — beban pompa belum bisa dialokasikan.";
+    }
+  }
+
+  /**
+   * saveListrikFormManual dipanggil HANYA lewat tombol "Simpan perubahan" di
+   * footer (lihat renderFooter -> blok listrikForm), bukan otomatis saat
+   * mengetik. Ini sengaja disamakan dengan pola Cabang & Gas: user kontrol
+   * penuh kapan data benar-benar dikirim ke server, dan bisa membatalkan
+   * (tombol Batal) tanpa perubahan yang belum disimpan ikut tersimpan.
+   */
+  function saveListrikFormManual() {
+    if (!view.listrikCabangId) return;
+
+    var btn = document.getElementById("listrikSaveBtn");
+    if (btn) { btn.disabled = true; btn.textContent = "Menyimpan..."; }
+    setSaveStatus("Menyimpan...", "busy");
+
+    google.script.run
+      .withSuccessHandler(function (res) {
+        if (btn) { btn.disabled = false; btn.textContent = "Simpan perubahan"; }
+        if (!res || !res.ok) { handleBackendError(res, "menyimpan data biaya listrik"); return; }
+        listrikFormState = res.data.record;
+        showToast("Data biaya listrik tersimpan.", "ok");
+        setSaveStatus("Tersimpan", "ok");
+      })
+      .withFailureHandler(function (err) {
+        if (btn) { btn.disabled = false; btn.textContent = "Simpan perubahan"; }
+        handleBackendError({ error: err && err.message ? err.message : String(err), stage: "client:saveBiayaListrik" }, "menyimpan data biaya listrik");
+      })
+      .saveBiayaListrik(view.listrikCabangId, listrikFormState);
+  }
+
+  /**
+   * Input hanya memperbarui listrikFormState di memori + pratinjau real-time.
+   * TIDAK mengirim apapun ke server di sini — pengiriman hanya terjadi saat
+   * tombol "Simpan perubahan" diklik (saveListrikFormManual).
+   */
+  function bindListrikFormInputs() {
+    document.getElementById("listrikTdl").addEventListener("input", function (e) {
+      listrikFormState.tdlPerKwh = Number(e.target.value) || 0;
+      renderListrikPreview();
+    });
+    document.getElementById("listrikWattCuci").addEventListener("input", function (e) {
+      listrikFormState.wattMesinCuci = Number(e.target.value) || 0;
+      renderListrikPreview();
+    });
+    document.getElementById("listrikWattKering").addEventListener("input", function (e) {
+      listrikFormState.wattMesinPengering = Number(e.target.value) || 0;
+      renderListrikPreview();
+    });
+    document.getElementById("listrikWattPompa").addEventListener("input", function (e) {
+      listrikFormState.wattPompaAir = Number(e.target.value) || 0;
+      renderListrikPreview();
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    initTimeSelects();
+    bindStaticFormInputs();
+    bindGasFormInputs();
+    bindListrikFormInputs();
+
+    document.getElementById("loadingState").style.display = "none";
+    document.getElementById("appRoot").style.display = "block";
+
+    showScreen("menu");
+  });
+})();
+</script>
+
+</body>
+</html>
