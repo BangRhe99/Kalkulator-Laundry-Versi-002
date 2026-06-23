@@ -1502,32 +1502,46 @@
     renderFooter();
   }
 
-  window.goBack = function () {
-    switch (view.screen) {
-      case "list":
-      case "masterBiaya":
-        showScreen("menu");
-        break;
-      case "ringkasan":
-      case "form":
-        goBackToList();
-        break;
-      case "gasList":
+ window.goBack = function () {
+  switch (view.screen) {
+    case "list":
+    case "masterBiaya":
+      showScreen("menu");
+      break;
+
+    case "ringkasan":
+    case "form":
+      goBackToList();
+      break;
+
+    case "gasList":
+      showScreen("masterBiaya");
+      refreshBiayaPickCabangList();
+      break;
+
+    case "gasForm":
+      if (view.gasCabangId) {
+        openGasList(view.gasCabangId);
+      } else {
         showScreen("masterBiaya");
         refreshBiayaPickCabangList();
-        break;
-      case "gasForm":
-        if (view.gasCabangId) { openGasList(view.gasCabangId); }
-        else { showScreen("masterBiaya"); }
-        break;
-      case "listrikForm":
-        showScreen("masterBiaya");
-        refreshBiayaPickCabangList();
-        break;
-      default:
-        showScreen("menu");
-    }
-  };
+      }
+      break;
+
+    case "listrikForm":
+      showScreen("masterBiaya");
+      refreshBiayaPickCabangList();
+      break;
+
+    case "airForm":
+      showScreen("masterBiaya");
+      refreshBiayaPickCabangList();
+      break;
+
+    default:
+      showScreen("menu");
+  }
+};
 
   window.openScreenCabangList = function () {
     showScreen("list");
@@ -2361,31 +2375,47 @@
    * 22 Kg buatan sendiri) tetap bisa diinput lewat field kapasitasCustomKg.
    */
   function renderGasKapasitasPills() {
-    var container = document.getElementById("gasKapasitasPills");
-    container.innerHTML = "";
+  var container = document.getElementById("gasKapasitasPills");
+  container.innerHTML = "";
 
-    var matchedPreset = BIAYA_GAS_PRESET.find(function (p) { return p.label === gasFormState.kapasitasLabel; });
-    var isCustom = !matchedPreset && gasFormState.kapasitasLabel.length > 0;
+  var matchedPreset = BIAYA_GAS_PRESET.find(function (p) {
+    return p.label === gasFormState.kapasitasLabel;
+  });
 
-    BIAYA_GAS_PRESET.forEach(function (preset) {
-      var pill = document.createElement("div");
-      pill.className = "pill flame" + (gasFormState.kapasitasLabel === preset.label ? " active" : "");
-      pill.textContent = preset.label;
-      pill.addEventListener("click", function () { selectGasPreset(preset); });
-      container.appendChild(pill);
+  var isCustom =
+    gasFormState.kapasitasLabel === "custom" ||
+    (!matchedPreset && gasFormState.kapasitasLabel && gasFormState.kapasitasLabel.length > 0);
+
+  BIAYA_GAS_PRESET.forEach(function (preset) {
+    var pill = document.createElement("div");
+    pill.className = "pill flame" + (gasFormState.kapasitasLabel === preset.label ? " active" : "");
+    pill.textContent = preset.label;
+    pill.addEventListener("click", function () {
+      selectGasPreset(preset);
     });
+    container.appendChild(pill);
+  });
 
-    var customPill = document.createElement("div");
-    customPill.className = "pill flame" + (isCustom ? " active" : "");
-    customPill.textContent = "Custom";
-    customPill.addEventListener("click", function () { selectGasCustom(); });
-    container.appendChild(customPill);
+  var customPill = document.createElement("div");
+  customPill.className = "pill flame" + (isCustom ? " active" : "");
+  customPill.textContent = "Custom";
+  customPill.addEventListener("click", function () {
+    selectGasCustom();
+  });
+  container.appendChild(customPill);
 
-    document.getElementById("gasKapasitasCustomField").style.display = isCustom ? "block" : "none";
-    if (isCustom) {
-      document.getElementById("gasKapasitasCustomKg").value = gasFormState.kapasitasKg || "";
-    }
+  var customField = document.getElementById("gasKapasitasCustomField");
+  var customInput = document.getElementById("gasKapasitasCustomKg");
+
+  customField.style.display = isCustom ? "block" : "none";
+
+  if (isCustom && customInput) {
+    customInput.value = gasFormState.kapasitasKg || "";
+  } else if (customInput) {
+    customInput.value = "";
+    customInput.classList.remove("input-err");
   }
+}
 
   function selectGasPreset(preset) {
     gasFormState.kapasitasLabel = preset.label;
@@ -2400,20 +2430,19 @@
     renderGasFormPreview();
   }
 
-  function selectGasCustom() {
-    if (!BIAYA_GAS_PRESET.some(function (p) { return p.label === gasFormState.kapasitasLabel; })) {
-      // sudah custom, tidak ada perlu diubah selain memastikan field terbuka
-      renderGasKapasitasPills();
-      return;
-    }
-    gasFormState.kapasitasLabel = "";
-    gasFormState.kapasitasKg = 0;
-    renderGasKapasitasPills();
-    syncGasFormFieldsFromState();
-    renderGasFormPreview();
-    var input = document.getElementById("gasKapasitasCustomKg");
-    if (input) input.focus();
+function selectGasCustom() {
+  gasFormState.kapasitasLabel = "custom";
+  gasFormState.kapasitasKg = 0;
+
+  renderGasKapasitasPills();
+  syncGasFormFieldsFromState();
+  renderGasFormPreview();
+
+  var input = document.getElementById("gasKapasitasCustomKg");
+  if (input) {
+    input.focus();
   }
+}
 
   function renderGasDryerOptions() {
     var select = document.getElementById("gasDryerRef");
@@ -2925,20 +2954,21 @@
     renderAirPreview();
   }
 
-  function renderAirPreview() {
-    if (!airFormState) return;
+function renderAirPreview() {
+  if (!airFormState) return;
 
-    var summary = computeAirSummary(airFormState);
-    document.getElementById("airBiayaPerLoad").textContent = "Rp " + formatRupiah(summary.biayaPerLoad);
+  var summary = computeAirSummary(airFormState);
 
-    var infoBox = document.getElementById("airInfoBox");
-    if (summary.infoText) {
-      infoBox.textContent = summary.infoText;
-      infoBox.style.display = "block";
-    } else {
-      infoBox.style.display = "none";
-    }
+  document.getElementById("airBiayaPerLoad").textContent = formatRupiah(summary.biayaPerLoad);
+
+  var infoBox = document.getElementById("airInfoBox");
+  if (summary.infoText) {
+    infoBox.textContent = summary.infoText;
+    infoBox.style.display = "block";
+  } else {
+    infoBox.style.display = "none";
   }
+}
 
   function computeAirSummary(record) {
     var sumberAir = record.sumberAir || "pdam";
@@ -2969,31 +2999,52 @@
   }
 
   function saveAirForm() {
-    if (!view.airCabangId || !airFormState) return;
+  if (!view.airCabangId || !airFormState) return;
 
-    var saveBtn = document.querySelector("footer .btn-primary");
-    if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = "Menyimpan..."; }
-    setSaveStatus("Menyimpan...", "busy");
+  var saveBtn = document.getElementById("airSaveBtn");
 
-    google.script.run
-      .withSuccessHandler(function (res) {
-        if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = "Simpan perubahan"; }
-        setSaveStatus("", "");
-        if (!res || !res.ok) {
-          handleBackendError(res, "menyimpan data biaya air");
-          return;
-        }
-        showToast("Data biaya air berhasil disimpan");
-        airFormState = res.data.record;
-        renderAirForm();
-      })
-      .withFailureHandler(function (err) {
-        if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = "Simpan perubahan"; }
-        handleBackendError({ error: err && err.message ? err.message : String(err), stage: "client:saveBiayaAir" }, "menyimpan data biaya air");
-      })
-      .saveBiayaAir(view.airCabangId, airFormState);
+  if (saveBtn) {
+    saveBtn.disabled = true;
+    saveBtn.textContent = "Menyimpan...";
   }
-  window.saveAirForm = saveAirForm;
+
+  setSaveStatus("Menyimpan...", "busy");
+
+  google.script.run
+    .withSuccessHandler(function (res) {
+      if (saveBtn) {
+        saveBtn.disabled = false;
+        saveBtn.textContent = "Simpan perubahan";
+      }
+
+      if (!res || !res.ok) {
+        handleBackendError(res, "menyimpan data biaya air");
+        return;
+      }
+
+      showToast("Data biaya air berhasil disimpan.", "ok");
+      setSaveStatus("Tersimpan", "ok");
+
+      airFormState = res.data.record;
+      renderAirForm();
+    })
+    .withFailureHandler(function (err) {
+      if (saveBtn) {
+        saveBtn.disabled = false;
+        saveBtn.textContent = "Simpan perubahan";
+      }
+
+      handleBackendError(
+        {
+          error: err && err.message ? err.message : String(err),
+          stage: "client:saveBiayaAir"
+        },
+        "menyimpan data biaya air"
+      );
+    })
+    .saveBiayaAir(view.airCabangId, airFormState);
+}
+window.saveAirForm = saveAirForm;
 
   function bindAirFormInputs() {
     if (view.screen === "airForm") {
