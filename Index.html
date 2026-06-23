@@ -1092,6 +1092,7 @@
         <div class="pill active flame" data-val="gas" onclick="selectKategoriBiaya('gas')">Gas</div>
         <div class="pill volt" data-val="listrik" onclick="selectKategoriBiaya('listrik')">Listrik</div>
         <div class="pill sage" data-val="air" onclick="selectKategoriBiaya('air')">Air</div>
+        <div class="pill brass" data-val="notaKasir" onclick="selectKategoriBiaya('notaKasir')">Admin/Nota</div>
         <div class="pill disabled" title="Segera hadir">Deterjen</div>
       </div>
 
@@ -1278,6 +1279,31 @@
       </div>
     </section>
 
+    <!-- ===================================================================
+         LAYAR: ADMIN/NOTA KASIR
+    =================================================================== -->
+    <section class="screen" id="screenNotaKasirForm">
+      <div class="list-header">
+        <h1 id="notaKasirTitle">Admin/Nota Kasir</h1>
+      </div>
+
+      <div class="group-divider">Sistem nota / kasir</div>
+      <div class="pill-group" id="notaKasirSistemPills">
+        <div class="pill brass active" data-val="aplikasi_kasir_thermal" onclick="selectNotaKasirSistem('aplikasi_kasir_thermal')">Aplikasi Kasir Thermal</div>
+        <div class="pill sage" data-val="nota_manual_ncr" onclick="selectNotaKasirSistem('nota_manual_ncr')">Nota Manual NCR</div>
+      </div>
+
+      <div id="notaKasirBody"></div>
+
+      <div class="group-divider">Ringkasan biaya</div>
+      <div class="panel">
+        <div class="meta-row"><span class="meta-label">Biaya aplikasi per load</span><span class="meta-val" id="notaAplikasiPerTransaksi">Rp 0</span></div>
+        <div class="meta-row"><span class="meta-label">Biaya nota per load</span><span class="meta-val" id="notaBiayaPerLoad">Rp 0</span></div>
+        <div class="meta-row"><span class="meta-label">Total biaya per load</span><span class="meta-val" id="notaTotalPerLoad">Rp 0</span></div>
+      </div>
+      <div class="field-hint" id="notaKasirWarning" style="display:none; margin-top: 8px;"></div>
+    </section>
+
   </div>
 </div>
 
@@ -1315,12 +1341,13 @@
     screen: "menu",
     editingId: null,
     isNew: false,
-    kategoriBiayaAktif: "gas", // "gas" | "listrik" — menentukan tujuan saat pilih cabang di screenMasterBiaya
+    kategoriBiayaAktif: "gas", // "gas" | "listrik" | "air" | "notaKasir" — menentukan tujuan saat pilih cabang di screenMasterBiaya
     gasCabangId: null,
     gasEditingId: null,
     gasIsNew: false,
     listrikCabangId: null,
     airCabangId: null,
+    notaKasirCabangId: null,
   };
   var cabangListCache = [];
   var formState = null;
@@ -1337,6 +1364,10 @@
   // Cache khusus Master Biaya Air, diisi tiap kali masuk ke screenAirForm.
   var airCabangCache = null;     // { id, namaLaundry }
   var airFormState = null;       // record biayaAir yang sedang diedit (selalu 1 per cabang)
+
+  // Cache khusus Master Biaya Nota & Kasir, diisi tiap kali masuk ke screenNotaKasirForm.
+  var notaKasirCabangCache = null; // { id, namaLaundry }
+  var notaKasirFormState = null;   // record biayaNotaKasir yang sedang diedit (selalu 1 per cabang)
 
   var localIdCounter = 0;
   function localId() {
@@ -1489,7 +1520,8 @@
     gasList: "screenGasList",
     gasForm: "screenGasForm",
     listrikForm: "screenListrikForm",
-    airForm: "screenAirForm"
+    airForm: "screenAirForm",
+    notaKasirForm: "screenNotaKasirForm"
   };
 
   function showScreen(name) {
@@ -1534,6 +1566,11 @@
       break;
 
     case "airForm":
+      showScreen("masterBiaya");
+      refreshBiayaPickCabangList();
+      break;
+
+    case "notaKasirForm":
       showScreen("masterBiaya");
       refreshBiayaPickCabangList();
       break;
@@ -1663,6 +1700,28 @@
 
       content.appendChild(airCancelBtn);
       content.appendChild(airSaveBtn);
+      return;
+    }
+
+    if (view.screen === "notaKasirForm") {
+      bar.style.display = "flex";
+
+      var notaCancelBtn = document.createElement("button");
+      notaCancelBtn.className = "btn-secondary";
+      notaCancelBtn.textContent = "Batal";
+      notaCancelBtn.onclick = function () {
+        showScreen("masterBiaya");
+        refreshBiayaPickCabangList();
+      };
+
+      var notaSaveBtn = document.createElement("button");
+      notaSaveBtn.className = "btn-primary brass";
+      notaSaveBtn.id = "notaKasirSaveBtn";
+      notaSaveBtn.textContent = "Simpan perubahan";
+      notaSaveBtn.onclick = saveNotaKasirForm;
+
+      content.appendChild(notaCancelBtn);
+      content.appendChild(notaSaveBtn);
       return;
     }
   }
@@ -2182,6 +2241,7 @@
       row.onclick = function () {
         if (view.kategoriBiayaAktif === "listrik") { openListrikForm(item.id); }
         else if (view.kategoriBiayaAktif === "air") { openAirForm(item.id); }
+        else if (view.kategoriBiayaAktif === "notaKasir") { openNotaKasirForm(item.id); }
         else { openGasList(item.id); }
       };
       row.innerHTML =
@@ -2860,6 +2920,303 @@ function selectGasCustom() {
       .getBiayaAir(cabangId);
   }
   window.openAirForm = openAirForm;
+
+  function openNotaKasirForm(cabangId) {
+    view.notaKasirCabangId = cabangId;
+    showScreen("notaKasirForm");
+    document.getElementById("notaKasirTitle").textContent = "Admin/Nota Kasir";
+    setSaveStatus("Memuat...", "busy");
+
+    google.script.run
+      .withSuccessHandler(function (res) {
+        if (!res || !res.ok) {
+          handleBackendError(res, "memuat data biaya nota/ kasir");
+          showScreen("masterBiaya");
+          refreshBiayaPickCabangList();
+          return;
+        }
+        notaKasirCabangCache = res.data.cabang;
+        notaKasirFormState = res.data.record;
+        document.getElementById("notaKasirTitle").textContent = "Admin/Nota Kasir · " + (notaKasirCabangCache.namaLaundry || "(Tanpa nama)");
+        renderNotaKasirForm();
+        setSaveStatus("", "");
+      })
+      .withFailureHandler(function (err) {
+        handleBackendError({ error: err && err.message ? err.message : String(err), stage: "client:getBiayaNotaKasir" }, "memuat data biaya nota/ kasir");
+        showScreen("masterBiaya");
+        refreshBiayaPickCabangList();
+      })
+      .getBiayaNotaKasir(cabangId);
+  }
+  window.openNotaKasirForm = openNotaKasirForm;
+
+  function selectNotaKasirSistem(value) {
+    if (!notaKasirFormState) return;
+    notaKasirFormState.sistemNotaKasir = value;
+    if (value === "nota_manual_ncr") {
+      notaKasirFormState.metodeBiayaAplikasi = "biaya_langsung_per_transaksi";
+    }
+    renderNotaKasirForm();
+  }
+  window.selectNotaKasirSistem = selectNotaKasirSistem;
+
+  function selectNotaKasirMetode(value) {
+    if (!notaKasirFormState) return;
+    notaKasirFormState.metodeBiayaAplikasi = value;
+    renderNotaKasirForm();
+  }
+  window.selectNotaKasirMetode = selectNotaKasirMetode;
+
+  function renderNotaKasirForm() {
+    if (!notaKasirFormState) return;
+
+    document.querySelectorAll("#notaKasirSistemPills .pill").forEach(function (pill) {
+      pill.classList.toggle("active", pill.getAttribute("data-val") === notaKasirFormState.sistemNotaKasir);
+    });
+
+    document.querySelectorAll("#notaKasirMetodePills .pill").forEach(function (pill) {
+      pill.classList.toggle("active", pill.getAttribute("data-val") === notaKasirFormState.metodeBiayaAplikasi);
+    });
+
+    var body = document.getElementById("notaKasirBody");
+    body.innerHTML = "";
+
+    if (notaKasirFormState.sistemNotaKasir === "aplikasi_kasir_thermal") {
+      body.innerHTML = "<div class=\"group-divider\">Metode biaya aplikasi</div>" +
+        "<div class=\"pill-group\" id=\"notaKasirMetodePills\">" +
+          "<div class=\"pill brass\" data-val=\"biaya_langsung_per_transaksi\" onclick=\"selectNotaKasirMetode('biaya_langsung_per_transaksi')\">Biaya langsung per transaksi</div>" +
+          "<div class=\"pill volt\" data-val=\"biaya_bulanan_dibagi_transaksi\" onclick=\"selectNotaKasirMetode('biaya_bulanan_dibagi_transaksi')\">Biaya bulanan dibagi transaksi</div>" +
+          "<div class=\"pill sage\" data-val=\"gratis_tanpa_biaya_admin\" onclick=\"selectNotaKasirMetode('gratis_tanpa_biaya_admin')\">Gratis tanpa biaya admin</div>" +
+        "</div>" +
+        "<div class=\"field\">" +
+          "<label for=\"notaBiayaPerTransaksi\">Biaya per transaksi (Rp)</label>" +
+          "<input type=\"number\" inputmode=\"decimal\" min=\"0\" step=\"0.01\" id=\"notaBiayaPerTransaksi\" placeholder=\"Contoh: 155\">" +
+        "</div>" +
+        "<div class=\"field\">" +
+          "<label for=\"notaBiayaBulananAplikasi\">Biaya bulanan aplikasi (Rp)</label>" +
+          "<input type=\"number\" inputmode=\"decimal\" min=\"0\" step=\"0.01\" id=\"notaBiayaBulananAplikasi\" placeholder=\"Contoh: 0\">" +
+        "</div>" +
+        "<div class=\"field\">" +
+          "<label for=\"notaEstimasiTransaksiPerBulan\">Estimasi transaksi per bulan</label>" +
+          "<input type=\"number\" inputmode=\"decimal\" min=\"0\" step=\"1\" id=\"notaEstimasiTransaksiPerBulan\" placeholder=\"Contoh: 300\">" +
+        "</div>" +
+        "<div class=\"group-divider\">Nota thermal</div>" +
+        "<div class=\"field\">" +
+          "<label for=\"notaHargaPerRoll\">Harga per roll (Rp)</label>" +
+          "<input type=\"number\" inputmode=\"decimal\" min=\"0\" step=\"0.01\" id=\"notaHargaPerRoll\" placeholder=\"Contoh: 1500\">" +
+        "</div>" +
+        "<div class=\"field\">" +
+          "<label for=\"notaTransaksiPerRoll\">Transaksi per roll</label>" +
+          "<input type=\"number\" inputmode=\"decimal\" min=\"0\" step=\"1\" id=\"notaTransaksiPerRoll\" placeholder=\"Contoh: 30\">" +
+        "</div>";
+    } else {
+      body.innerHTML = "<div class=\"group-divider\">Nota manual NCR</div>" +
+        "<div class=\"field\">" +
+          "<label for=\"notaHargaSatuanAwalNota\">Harga satuan awal nota (Rp)</label>" +
+          "<input type=\"number\" inputmode=\"decimal\" min=\"0\" step=\"0.01\" id=\"notaHargaSatuanAwalNota\" placeholder=\"Contoh: 30000\">" +
+        "</div>" +
+        "<div class=\"field\">" +
+          "<label for=\"notaJumlahLembarNota\">Jumlah lembar nota</label>" +
+          "<input type=\"number\" inputmode=\"decimal\" min=\"0\" step=\"1\" id=\"notaJumlahLembarNota\" placeholder=\"Contoh: 150\">" +
+        "</div>" +
+        "<div class=\"field\">" +
+          "<label for=\"notaNotaPerTransaksi\">Nota per transaksi</label>" +
+          "<input type=\"number\" inputmode=\"decimal\" min=\"0\" step=\"1\" id=\"notaNotaPerTransaksi\" placeholder=\"Contoh: 3\">" +
+        "</div>";
+    }
+
+    var biayaPerTransaksiInput = document.getElementById("notaBiayaPerTransaksi");
+    if (biayaPerTransaksiInput) {
+      biayaPerTransaksiInput.value = notaKasirFormState.biayaPerTransaksi || "";
+      biayaPerTransaksiInput.addEventListener("input", function (e) {
+        notaKasirFormState.biayaPerTransaksi = Number(e.target.value) || 0;
+        renderNotaKasirPreview();
+      });
+    }
+
+    var biayaBulananInput = document.getElementById("notaBiayaBulananAplikasi");
+    if (biayaBulananInput) {
+      biayaBulananInput.value = notaKasirFormState.biayaBulananAplikasi || "";
+      biayaBulananInput.addEventListener("input", function (e) {
+        notaKasirFormState.biayaBulananAplikasi = Number(e.target.value) || 0;
+        renderNotaKasirPreview();
+      });
+    }
+
+    var estimasiTransaksiInput = document.getElementById("notaEstimasiTransaksiPerBulan");
+    if (estimasiTransaksiInput) {
+      estimasiTransaksiInput.value = notaKasirFormState.estimasiTransaksiPerBulan || "";
+      estimasiTransaksiInput.addEventListener("input", function (e) {
+        notaKasirFormState.estimasiTransaksiPerBulan = Number(e.target.value) || 0;
+        renderNotaKasirPreview();
+      });
+    }
+
+    var hargaPerRollInput = document.getElementById("notaHargaPerRoll");
+    if (hargaPerRollInput) {
+      hargaPerRollInput.value = notaKasirFormState.hargaPerRoll || "";
+      hargaPerRollInput.addEventListener("input", function (e) {
+        notaKasirFormState.hargaPerRoll = Number(e.target.value) || 0;
+        renderNotaKasirPreview();
+      });
+    }
+
+    var transaksiPerRollInput = document.getElementById("notaTransaksiPerRoll");
+    if (transaksiPerRollInput) {
+      transaksiPerRollInput.value = notaKasirFormState.transaksiPerRoll || "";
+      transaksiPerRollInput.addEventListener("input", function (e) {
+        notaKasirFormState.transaksiPerRoll = Number(e.target.value) || 0;
+        renderNotaKasirPreview();
+      });
+    }
+
+    var hargaSatuanAwalNotaInput = document.getElementById("notaHargaSatuanAwalNota");
+    if (hargaSatuanAwalNotaInput) {
+      hargaSatuanAwalNotaInput.value = notaKasirFormState.hargaSatuanAwalNota || "";
+      hargaSatuanAwalNotaInput.addEventListener("input", function (e) {
+        notaKasirFormState.hargaSatuanAwalNota = Number(e.target.value) || 0;
+        renderNotaKasirPreview();
+      });
+    }
+
+    var jumlahLembarNotaInput = document.getElementById("notaJumlahLembarNota");
+    if (jumlahLembarNotaInput) {
+      jumlahLembarNotaInput.value = notaKasirFormState.jumlahLembarNota || "";
+      jumlahLembarNotaInput.addEventListener("input", function (e) {
+        notaKasirFormState.jumlahLembarNota = Number(e.target.value) || 0;
+        renderNotaKasirPreview();
+      });
+    }
+
+    var notaPerTransaksiInput = document.getElementById("notaNotaPerTransaksi");
+    if (notaPerTransaksiInput) {
+      notaPerTransaksiInput.value = notaKasirFormState.notaPerTransaksi || "";
+      notaPerTransaksiInput.addEventListener("input", function (e) {
+        notaKasirFormState.notaPerTransaksi = Number(e.target.value) || 0;
+        renderNotaKasirPreview();
+      });
+    }
+
+    renderNotaKasirPreview();
+  }
+
+  function renderNotaKasirPreview() {
+    if (!notaKasirFormState) return;
+    var summary = computeNotaKasirPreview(notaKasirFormState);
+    document.getElementById("notaAplikasiPerTransaksi").textContent = formatRupiah(summary.biayaAplikasiPerLoad);
+    document.getElementById("notaBiayaPerLoad").textContent = formatRupiah(summary.biayaNotaPerLoad);
+    document.getElementById("notaTotalPerLoad").textContent = formatRupiah(summary.totalBiayaNotaKasirPerLoad);
+    var warningEl = document.getElementById("notaKasirWarning");
+    if (summary.warning) {
+      warningEl.textContent = summary.warning;
+      warningEl.style.display = "block";
+    } else {
+      warningEl.style.display = "none";
+    }
+  }
+
+  function computeNotaKasirPreview(record) {
+    var sistem = record.sistemNotaKasir || "aplikasi_kasir_thermal";
+    var metode = record.metodeBiayaAplikasi || "biaya_langsung_per_transaksi";
+    var biayaAplikasiPerLoad = 0;
+    var biayaNotaPerLoad = 0;
+    var warning = "";
+    var statusValid = true;
+    var hargaNotaPerLembar = 0;
+
+    if (sistem === "aplikasi_kasir_thermal") {
+      if (metode === "biaya_langsung_per_transaksi") {
+        biayaAplikasiPerLoad = Number(record.biayaPerTransaksi) || 0;
+      } else if (metode === "biaya_bulanan_dibagi_transaksi") {
+        var biayaBulanan = Number(record.biayaBulananAplikasi) || 0;
+        var trxBulanan = Number(record.estimasiTransaksiPerBulan) || 0;
+        if (trxBulanan > 0) {
+          biayaAplikasiPerLoad = round2(biayaBulanan / trxBulanan);
+        } else {
+          biayaAplikasiPerLoad = 0;
+          warning = "Estimasi transaksi bulanan harus diisi lebih dari 0 untuk menghitung biaya aplikasi.";
+          statusValid = false;
+        }
+      } else {
+        biayaAplikasiPerLoad = 0;
+      }
+
+      var hargaRoll = Number(record.hargaPerRoll) || 0;
+      var transaksiRoll = Number(record.transaksiPerRoll) || 0;
+      if (transaksiRoll > 0) {
+        biayaNotaPerLoad = round2(hargaRoll / transaksiRoll);
+      } else {
+        biayaNotaPerLoad = 0;
+        if (!warning) {
+          warning = "Transaksi per roll harus diisi lebih dari 0 untuk menghitung biaya nota thermal.";
+        }
+        statusValid = false;
+      }
+    } else {
+      var hargaAwal = Number(record.hargaSatuanAwalNota) || 0;
+      var jumlahLembar = Number(record.jumlahLembarNota) || 0;
+      var notaPerTransaksi = Number(record.notaPerTransaksi) || 0;
+
+      if (jumlahLembar > 0) {
+        hargaNotaPerLembar = round2(hargaAwal / jumlahLembar);
+      } else {
+        hargaNotaPerLembar = 0;
+        warning = "Jumlah lembar nota harus diisi lebih dari 0 untuk menghitung harga per lembar.";
+        statusValid = false;
+      }
+      biayaNotaPerLoad = round2(hargaNotaPerLembar * notaPerTransaksi);
+      biayaAplikasiPerLoad = 0;
+      if (notaPerTransaksi <= 0) {
+        if (!warning) {
+          warning = "Nota per transaksi harus diisi lebih dari 0 untuk menghitung biaya nota.";
+        }
+        statusValid = false;
+      }
+    }
+
+    return {
+      biayaAplikasiPerLoad: round2(biayaAplikasiPerLoad),
+      biayaNotaPerLoad: round2(biayaNotaPerLoad),
+      totalBiayaNotaKasirPerLoad: round2(biayaAplikasiPerLoad + biayaNotaPerLoad),
+      warning: warning,
+      statusValid: statusValid
+    };
+  }
+
+  function saveNotaKasirForm() {
+    if (!view.notaKasirCabangId || !notaKasirFormState) return;
+    var saveBtn = document.getElementById("notaKasirSaveBtn");
+    if (saveBtn) {
+      saveBtn.disabled = true;
+      saveBtn.textContent = "Menyimpan...";
+    }
+    setSaveStatus("Menyimpan...", "busy");
+
+    google.script.run
+      .withSuccessHandler(function (res) {
+        if (saveBtn) {
+          saveBtn.disabled = false;
+          saveBtn.textContent = "Simpan perubahan";
+        }
+        if (!res || !res.ok) {
+          handleBackendError(res, "menyimpan data biaya nota kasir");
+          return;
+        }
+        notaKasirFormState = res.data.record;
+        renderNotaKasirForm();
+        showToast("Data biaya nota/ kasir tersimpan.", "ok");
+        setSaveStatus("Tersimpan", "ok");
+      })
+      .withFailureHandler(function (err) {
+        if (saveBtn) {
+          saveBtn.disabled = false;
+          saveBtn.textContent = "Simpan perubahan";
+        }
+        handleBackendError({ error: err && err.message ? err.message : String(err), stage: "client:saveBiayaNotaKasir" }, "menyimpan data biaya nota kasir");
+      })
+      .saveBiayaNotaKasir(view.notaKasirCabangId, notaKasirFormState);
+  }
+  window.saveNotaKasirForm = saveNotaKasirForm;
 
   function selectAirSumber(sumber) {
     airFormState.sumberAir = sumber;
