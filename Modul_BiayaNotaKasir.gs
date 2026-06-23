@@ -221,6 +221,8 @@ function saveBiayaNotaKasir(cabangId, payload) {
         if (typeof ensureMigrated_ === "function") {
           try {
             ensureMigrated_();
+              var _nota_start = Date.now();
+              try { Logger.log("[saveBiayaNotaKasir] start: " + cabangId); } catch (e) {}
           } catch (e) {
             console.warn("[NotaKasir] ensureMigrated_ dilewati saat save:", e);
           }
@@ -260,15 +262,19 @@ function saveBiayaNotaKasir(cabangId, payload) {
       data: {
         record: normalized,
         summary: computeBiayaNotaKasirSummary_(normalized),
-      },
-    };
-  } catch (err) {
-    return notaKasirErrorResponse_(err, "saveBiayaKasir");
-  }
-}
-
+              try { Logger.log("[saveBiayaNotaKasir] wrote row for: " + cabangId); } catch (e) {}
+              var _nota_elapsed = Date.now() - _nota_start;
+              try { Logger.log("[saveBiayaNotaKasir] end: " + cabangId + " elapsedMs=" + _nota_elapsed); } catch (e) {}
+              return {
+                ok: true,
+                data: {
+                  record: normalized,
+                  summary: computeBiayaNotaKasirSummary_(normalized),
+                },
+              };
 // ============================================================================
-// SECTION: NORMALISASI / VALIDASI — BIAYA NOTA & KASIR
+              try { Logger.log("[saveBiayaNotaKasir] error: " + (err && err.message ? err.message : String(err))); } catch (e) {}
+              return notaKasirErrorResponse_(err, "saveBiayaKasir");
 // ============================================================================
 
 function normalizeBiayaNotaKasirRecord_(input, cabangId) {
