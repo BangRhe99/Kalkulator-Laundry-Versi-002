@@ -1,3 +1,402 @@
-function myFunction() {
-  
+/**
+ * ====================================================================
+ * MODUL: MASTER BIAYA — NOTA & KASIR
+ * ====================================================================
+ * Fitur ini mengelola satu konfigurasi biaya nota/kasir per cabang.
+ * Disimpan di sheet terpisah "BiayaNotaKasir" dengan satu baris per cabang.
+ *
+ * DEPENDENSI:
+ *   - Util_Umum.gs         : toSafeString_, toNumber_, clamp_, round2_,
+ *                            newId_, errorResponse_
+ *   - Util_Penyimpanan.gs  : tidak dipakai, karena modul ini menyimpan di
+ *                            sheet khusus sendiri sesuai requirement.
+ *   - Migrasi_Skema.gs     : ensureMigrated_
+ *   - Modul_Cabang.gs      : getCabang() jika tersedia untuk nama laundry
+ * ====================================================================
+ */
+
+// ============================================================================
+// SECTION: SKEMA / DEFAULT — MASTER BIAYA (NOTA & KASIR)
+// ============================================================================
+
+function defaultBiayaNotaKasirRecord_(cabangId) {
+  return {
+    id: "",
+    cabangId: cabangId || "",
+    sistemNotaKasir: "aplikasi_kasir_thermal", // aplikasi_kasir_thermal | nota_manual_ncr
+    metodeBiayaAplikasi: "biaya_langsung_per_transaksi", // biaya_langsung_per_transaksi | biaya_bulanan_dibagi_transaksi | gratis_tanpa_biaya_admin
+    biayaPerTransaksi: 155,
+    biayaBulananAplikasi: 0,
+    estimasiTransaksiPerBulan: 0,
+    hargaPerRoll: 1500,
+    transaksiPerRoll: 30,
+    hargaSatuanAwalNota: 30000,
+    jumlahLembarNota: 150,
+    notaPerTransaksi: 3,
+    createdAt: null,
+    updatedAt: null,
+  };
+}
+
+// ============================================================================
+// SECTION: STORAGE SHEET HELPERS
+// ============================================================================
+
+function getBiayaNotaKasirSheet_() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName("BiayaNotaKasir");
+  if (!sheet) {
+    sheet = ss.insertSheet("BiayaNotaKasir");
+    const headers = [
+      "id",
+      "cabangId",
+      "sistemNotaKasir",
+      "metodeBiayaAplikasi",
+      "biayaPerTransaksi",
+      "biayaBulananAplikasi",
+      "estimasiTransaksiPerBulan",
+      "hargaPerRoll",
+      "transaksiPerRoll",
+      "hargaSatuanAwalNota",
+      "jumlahLembarNota",
+      "notaPerTransaksi",
+      "createdAt",
+      "updatedAt",
+    ];
+    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+  }
+  return sheet;
+}
+
+function findBiayaNotaKasirRow_(sheet, cabangId) {
+  const values = sheet.getDataRange().getValues();
+  const header = values[0] || [];
+  const cabangIdIndex = header.indexOf("cabangId");
+  if (cabangIdIndex === -1) return -1;
+  for (let i = 1; i < values.length; i++) {
+    if (String(values[i][cabangIdIndex]) === cabangId) {
+      return i + 1;
+    }
+  }
+  return -1;
+}
+
+function buildBiayaNotaKasirRow_(record) {
+  return [
+    record.id,
+    record.cabangId,
+    record.sistemNotaKasir,
+    record.metodeBiayaAplikasi,
+    record.biayaPerTransaksi,
+    record.biayaBulananAplikasi,
+    record.estimasiTransaksiPerBulan,
+    record.hargaPerRoll,
+    record.transaksiPerRoll,
+    record.hargaSatuanAwalNota,
+    record.jumlahLembarNota,
+    record.notaPerTransaksi,
+    record.createdAt,
+    record.updatedAt,
+  ];
+}
+
+function parseBiayaNotaKasirRecord_(row) {
+  return {
+    id: String(row.id || ""),
+    cabangId: String(row.cabangId || ""),
+    sistemNotaKasir: String(row.sistemNotaKasir || ""),
+    metodeBiayaAplikasi: String(row.metodeBiayaAplikasi || ""),
+    biayaPerTransaksi: toNumber_(row.biayaPerTransaksi, 0),
+    biayaBulananAplikasi: toNumber_(row.biayaBulananAplikasi, 0),
+    estimasiTransaksiPerBulan: toNumber_(row.estimasiTransaksiPerBulan, 0),
+    hargaPerRoll: toNumber_(row.hargaPerRoll, 0),
+    transaksiPerRoll: toNumber_(row.transaksiPerRoll, 0),
+    hargaSatuanAwalNota: toNumber_(row.hargaSatuanAwalNota, 0),
+    jumlahLembarNota: toNumber_(row.jumlahLembarNota, 0),
+    notaPerTransaksi: toNumber_(row.notaPerTransaksi, 0),
+    createdAt: row.createdAt || null,
+    updatedAt: row.updatedAt || null,
+  };
+}
+
+function getCabangInfo_(cabangId) {
+  if (!cabangId || typeof cabangId !== "string") {
+    return { id: "", namaLaundry: "" };
+  }
+  if (typeof getCabang === "function") {
+    try {
+      const res = getCabang(cabangId);
+      if (res && res.ok && res.data && res.data.cabang) {
+        const cabang = res.data.cabang;
+        const namaLaundry = cabang.profil && cabang.profil.namaLaundry ? String(cabang.profil.namaLaundry) : "";
+        return { id: cabangId, namaLaundry: namaLaundry };
+      }
+    } catch (e) {
+      // fallback silent
+    }
+  }
+  return { id: cabangId, namaLaundry: "" };
+}
+
+// ============================================================================
+// SECTION: PUBLIC FUNCTIONS — getBiayaNotaKasir / saveBiayaNotaKasir
+// ============================================================================
+
+function getBiayaNotaKasir(cabangId) {
+  try {
+    if (!cabangId || typeof cabangId !== "string") {
+      return { ok: false, error: "ID cabang tidak valid.", stage: "getBiayaNotaKasir:validate_cabang_id" };
+    }
+    ensureMigrated_();
+
+    const cabang = getCabangInfo_(cabangId);
+    const sheet = getBiayaNotaKasirSheet_();
+    const rowIndex = findBiayaNotaKasirRow_(sheet, cabangId);
+
+    let record;
+    if (rowIndex > 0) {
+      const values = sheet.getRange(rowIndex, 1, 1, 14).getValues()[0];
+      const headers = [
+        "id",
+        "cabangId",
+        "sistemNotaKasir",
+        "metodeBiayaAplikasi",
+        "biayaPerTransaksi",
+        "biayaBulananAplikasi",
+        "estimasiTransaksiPerBulan",
+        "hargaPerRoll",
+        "transaksiPerRoll",
+        "hargaSatuanAwalNota",
+        "jumlahLembarNota",
+        "notaPerTransaksi",
+        "createdAt",
+        "updatedAt",
+      ];
+      const rowObject = {};
+      for (let i = 0; i < headers.length; i++) {
+        rowObject[headers[i]] = values[i];
+      }
+      record = normalizeBiayaNotaKasirRecord_(rowObject, cabangId);
+    } else {
+      record = defaultBiayaNotaKasirRecord_(cabangId);
+    }
+
+    return {
+      ok: true,
+      data: {
+        cabang: { id: cabang.id, namaLaundry: cabang.namaLaundry },
+        record: record,
+        summary: computeBiayaNotaKasirSummary_(record),
+      },
+    };
+  } catch (err) {
+    return errorResponse_(err, "getBiayaNotaKasir");
+  }
+}
+
+function saveBiayaNotaKasir(cabangId, payload) {
+  try {
+    if (!cabangId || typeof cabangId !== "string") {
+      return { ok: false, error: "ID cabang tidak valid.", stage: "saveBiayaNotaKasir:validate_cabang_id" };
+    }
+    if (!payload || typeof payload !== "object") {
+      return { ok: false, error: "Data yang dikirim tidak valid.", stage: "saveBiayaNotaKasir:validate_payload" };
+    }
+    ensureMigrated_();
+
+    const cabang = getCabangInfo_(cabangId);
+    const sheet = getBiayaNotaKasirSheet_();
+    const rowIndex = findBiayaNotaKasirRow_(sheet, cabangId);
+
+    const existingRecord = rowIndex > 0
+      ? parseBiayaNotaKasirRecord_(sheet.getRange(rowIndex, 1, 1, 14).getValues()[0].reduce(function (acc, value, idx) {
+          acc[
+            [
+              "id",
+              "cabangId",
+              "sistemNotaKasir",
+              "metodeBiayaAplikasi",
+              "biayaPerTransaksi",
+              "biayaBulananAplikasi",
+              "estimasiTransaksiPerBulan",
+              "hargaPerRoll",
+              "transaksiPerRoll",
+              "hargaSatuanAwalNota",
+              "jumlahLembarNota",
+              "notaPerTransaksi",
+              "createdAt",
+              "updatedAt",
+            ][idx]
+          ] = value;
+          return acc;
+        }, {}))
+      : null;
+
+    const normalized = normalizeBiayaNotaKasirRecord_(payload, cabangId);
+    normalized.id = existingRecord && existingRecord.id ? existingRecord.id : (normalized.id || newId_("n"));
+    const now = new Date().toISOString();
+    normalized.createdAt = existingRecord && existingRecord.createdAt ? existingRecord.createdAt : now;
+    normalized.updatedAt = now;
+
+    const validation = validateBiayaNotaKasir_(normalized);
+    if (!validation.valid) {
+      return { ok: false, error: validation.message, stage: "saveBiayaNotaKasir:validate_business_rules" };
+    }
+
+    const row = buildBiayaNotaKasirRow_(normalized);
+    if (rowIndex > 0) {
+      sheet.getRange(rowIndex, 1, 1, row.length).setValues([row]);
+    } else {
+      sheet.appendRow(row);
+    }
+
+    return {
+      ok: true,
+      data: {
+        record: normalized,
+        summary: computeBiayaNotaKasirSummary_(normalized),
+      },
+    };
+  } catch (err) {
+    return errorResponse_(err, "saveBiayaNotaKasir");
+  }
+}
+
+// ============================================================================
+// SECTION: NORMALISASI / VALIDASI — BIAYA NOTA & KASIR
+// ============================================================================
+
+function normalizeBiayaNotaKasirRecord_(input, cabangId) {
+  const base = defaultBiayaNotaKasirRecord_(cabangId);
+  const out = defaultBiayaNotaKasirRecord_(cabangId);
+
+  out.id = toSafeString_(input && input.id, base.id, 80);
+  out.cabangId = cabangId;
+  out.sistemNotaKasir = toSafeString_(input && input.sistemNotaKasir, base.sistemNotaKasir, 40);
+  if (!["aplikasi_kasir_thermal", "nota_manual_ncr"].includes(out.sistemNotaKasir)) {
+    out.sistemNotaKasir = base.sistemNotaKasir;
+  }
+
+  out.metodeBiayaAplikasi = toSafeString_(input && input.metodeBiayaAplikasi, base.metodeBiayaAplikasi, 40);
+  if (!["biaya_langsung_per_transaksi", "biaya_bulanan_dibagi_transaksi", "gratis_tanpa_biaya_admin"].includes(out.metodeBiayaAplikasi)) {
+    out.metodeBiayaAplikasi = base.metodeBiayaAplikasi;
+  }
+
+  out.biayaPerTransaksi = clamp_(toNumber_(input && input.biayaPerTransaksi, base.biayaPerTransaksi), 0, 100000000);
+  out.biayaBulananAplikasi = clamp_(toNumber_(input && input.biayaBulananAplikasi, base.biayaBulananAplikasi), 0, 100000000);
+  out.estimasiTransaksiPerBulan = clamp_(toNumber_(input && input.estimasiTransaksiPerBulan, base.estimasiTransaksiPerBulan), 0, 100000000);
+  out.hargaPerRoll = clamp_(toNumber_(input && input.hargaPerRoll, base.hargaPerRoll), 0, 100000000);
+  out.transaksiPerRoll = clamp_(toNumber_(input && input.transaksiPerRoll, base.transaksiPerRoll), 0, 100000000);
+  out.hargaSatuanAwalNota = clamp_(toNumber_(input && input.hargaSatuanAwalNota, base.hargaSatuanAwalNota), 0, 100000000);
+  out.jumlahLembarNota = clamp_(toNumber_(input && input.jumlahLembarNota, base.jumlahLembarNota), 0, 100000000);
+  out.notaPerTransaksi = clamp_(toNumber_(input && input.notaPerTransaksi, base.notaPerTransaksi), 0, 100000000);
+
+  out.createdAt = (input && input.createdAt) || base.createdAt;
+  out.updatedAt = (input && input.updatedAt) || base.updatedAt;
+
+  return out;
+}
+
+function validateBiayaNotaKasir_(data) {
+  if (!data.cabangId) {
+    return { valid: false, message: "Cabang belum ditentukan." };
+  }
+  if (!["aplikasi_kasir_thermal", "nota_manual_ncr"].includes(data.sistemNotaKasir)) {
+    return { valid: false, message: "Sistem nota/kasir tidak valid." };
+  }
+  if (data.sistemNotaKasir === "aplikasi_kasir_thermal" &&
+      !["biaya_langsung_per_transaksi", "biaya_bulanan_dibagi_transaksi", "gratis_tanpa_biaya_admin"].includes(data.metodeBiayaAplikasi)) {
+    return { valid: false, message: "Metode biaya aplikasi tidak valid." };
+  }
+  return { valid: true, message: "" };
+}
+
+// ============================================================================
+// SECTION: KALKULASI — BIAYA NOTA & KASIR
+// ============================================================================
+
+function computeBiayaNotaKasirSummary_(record) {
+  record = record || defaultBiayaNotaKasirRecord_(record && record.cabangId);
+
+  const sistem = record.sistemNotaKasir || "aplikasi_kasir_thermal";
+  const metode = record.metodeBiayaAplikasi || "biaya_langsung_per_transaksi";
+
+  let biayaAplikasiPerLoad = 0;
+  let biayaNotaPerLoad = 0;
+  let hargaNotaPerLembar = 0;
+  let biayaNotaPerTransaksi = 0;
+  let totalBiayaNotaKasirPerLoad = 0;
+  let warning = "";
+  let statusValid = true;
+
+  if (sistem === "aplikasi_kasir_thermal") {
+    if (metode === "biaya_langsung_per_transaksi") {
+      biayaAplikasiPerLoad = round2_(toNumber_(record.biayaPerTransaksi, 0));
+      if (biayaAplikasiPerLoad < 0) biayaAplikasiPerLoad = 0;
+    } else if (metode === "biaya_bulanan_dibagi_transaksi") {
+      const biayaBulanan = toNumber_(record.biayaBulananAplikasi, 0);
+      const trxBulanan = toNumber_(record.estimasiTransaksiPerBulan, 0);
+      if (trxBulanan > 0) {
+        biayaAplikasiPerLoad = round2_(biayaBulanan / trxBulanan);
+      } else {
+        biayaAplikasiPerLoad = 0;
+        warning = "Estimasi transaksi bulanan harus diisi lebih dari 0 untuk menghitung biaya aplikasi.";
+        statusValid = false;
+      }
+    } else {
+      biayaAplikasiPerLoad = 0;
+    }
+
+    const hargaRoll = toNumber_(record.hargaPerRoll, 0);
+    const transaksiRoll = toNumber_(record.transaksiPerRoll, 0);
+    if (transaksiRoll > 0) {
+      biayaNotaPerLoad = round2_(hargaRoll / transaksiRoll);
+    } else {
+      biayaNotaPerLoad = 0;
+      if (!warning) {
+        warning = "Transaksi per roll harus diisi lebih dari 0 untuk menghitung biaya nota thermal.";
+      }
+      statusValid = false;
+    }
+
+    totalBiayaNotaKasirPerLoad = round2_(biayaAplikasiPerLoad + biayaNotaPerLoad);
+  }
+
+  if (sistem === "nota_manual_ncr") {
+    const hargaAwal = toNumber_(record.hargaSatuanAwalNota, 0);
+    const jumlahLembar = toNumber_(record.jumlahLembarNota, 0);
+    const notaPerTransaksi = toNumber_(record.notaPerTransaksi, 0);
+
+    if (jumlahLembar > 0) {
+      hargaNotaPerLembar = round2_(hargaAwal / jumlahLembar);
+    } else {
+      hargaNotaPerLembar = 0;
+      warning = "Jumlah lembar nota harus diisi lebih dari 0 untuk menghitung harga per lembar.";
+      statusValid = false;
+    }
+
+    biayaNotaPerTransaksi = round2_(hargaNotaPerLembar * notaPerTransaksi);
+    biayaAplikasiPerLoad = 0;
+    biayaNotaPerLoad = biayaNotaPerTransaksi;
+    totalBiayaNotaKasirPerLoad = biayaNotaPerTransaksi;
+
+    if (notaPerTransaksi <= 0) {
+      if (!warning) {
+        warning = "Nota per transaksi harus diisi lebih dari 0 untuk menghitung biaya nota.";
+      }
+      statusValid = false;
+    }
+  }
+
+  return {
+    sistemNotaKasir: sistem,
+    metodeBiayaAplikasi: metode,
+    biayaAplikasiPerLoad: round2_(biayaAplikasiPerLoad),
+    biayaNotaPerLoad: round2_(biayaNotaPerLoad),
+    hargaNotaPerLembar: round2_(hargaNotaPerLembar),
+    biayaNotaPerTransaksi: round2_(biayaNotaPerTransaksi),
+    totalBiayaNotaKasirPerLoad: round2_(totalBiayaNotaKasirPerLoad),
+    statusValid: statusValid,
+    warning: warning,
+  };
 }

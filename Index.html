@@ -3046,22 +3046,12 @@ function renderAirPreview() {
 }
 window.saveAirForm = saveAirForm;
 
-  function bindAirFormInputs() {
-    if (view.screen === "airForm") {
-      var saveBtn = document.querySelector("footer .btn-primary");
-      if (saveBtn) {
-        saveBtn.textContent = "Simpan perubahan";
-        saveBtn.onclick = saveAirForm;
-      }
-    }
-  }
 
   document.addEventListener("DOMContentLoaded", function () {
     initTimeSelects();
     bindStaticFormInputs();
     bindGasFormInputs();
     bindListrikFormInputs();
-    bindAirFormInputs();
 
     document.getElementById("loadingState").style.display = "none";
     document.getElementById("appRoot").style.display = "block";
