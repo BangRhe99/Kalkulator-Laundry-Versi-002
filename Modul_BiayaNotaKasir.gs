@@ -177,15 +177,16 @@ function getBiayaNotaKasir(cabangId) {
     if (!cabangId || typeof cabangId !== "string") {
       return { ok: false, error: "ID cabang tidak valid.", stage: "getBiayaNotaKasir:validate_cabang_id" };
     }
+
     if (typeof ensureMigrated_ === "function") {
       try {
-        // Do not force a full migration during reads; keep guarded.
         ensureMigrated_();
       } catch (e) {
         console.warn("[NotaKasir] ensureMigrated_ gagal, melanjutkan tanpa migrasi:", e);
       }
     }
 
+    const cabang = getCabangInfo_(cabangId);
     const sheet = getBiayaNotaKasirSheet_();
     const rowIndex = findBiayaNotaKasirRowFast_(sheet, cabangId);
 
@@ -204,10 +205,10 @@ function getBiayaNotaKasir(cabangId) {
         cabang: { id: cabang.id, namaLaundry: cabang.namaLaundry },
         record: record,
         summary: computeBiayaNotaKasirSummary_(record),
-      } catch (err) {
-        return notaKasirErrorResponse_(err, "getBiayaNotaKasir");
-      }
-    return errorResponse_(err, "getBiayaNotaKasir");
+      },
+    };
+  } catch (err) {
+    return notaKasirErrorResponse_(err, "getBiayaNotaKasir");
   }
 }
 
@@ -217,27 +218,17 @@ function saveBiayaNotaKasir(cabangId, payload) {
       return { ok: false, error: "ID cabang tidak valid.", stage: "saveBiayaNotaKasir:validate_cabang_id" };
     }
     if (!payload || typeof payload !== "object") {
-        // Guarded migration call - avoid forcing heavy migration during save
-        if (typeof ensureMigrated_ === "function") {
-          try {
-            ensureMigrated_();
-              var _nota_start = Date.now();
-              try { Logger.log("[saveBiayaNotaKasir] start: " + cabangId); } catch (e) {}
-          } catch (e) {
-            console.warn("[NotaKasir] ensureMigrated_ dilewati saat save:", e);
-          }
-        }
+      return { ok: false, error: "Data yang dikirim tidak valid.", stage: "saveBiayaNotaKasir:validate_payload" };
+    }
 
-        const sheet = getBiayaNotaKasirSheet_();
-        const rowIndex = findBiayaNotaKasirRowFast_(sheet, cabangId);
+    const sheet = getBiayaNotaKasirSheet_();
+    const rowIndex = findBiayaNotaKasirRowFast_(sheet, cabangId);
 
-        let existingRecord = null;
-        if (rowIndex > 0) {
-          const existingValues = sheet.getRange(rowIndex, 1, 1, BIAYA_NOTA_KASIR_HEADERS_.length).getValues()[0];
-          existingRecord = parseBiayaNotaKasirRecord_(rowArrayToBiayaNotaKasirObject_(existingValues));
-        }
-        }, {}))
-      : null;
+    let existingRecord = null;
+    if (rowIndex > 0) {
+      const existingValues = sheet.getRange(rowIndex, 1, 1, BIAYA_NOTA_KASIR_HEADERS_.length).getValues()[0];
+      existingRecord = parseBiayaNotaKasirRecord_(rowArrayToBiayaNotaKasirObject_(existingValues));
+    }
 
     const normalized = normalizeBiayaNotaKasirRecord_(payload, cabangId);
     normalized.id = existingRecord && existingRecord.id ? existingRecord.id : (normalized.id || newId_("n"));
@@ -262,38 +253,12 @@ function saveBiayaNotaKasir(cabangId, payload) {
       data: {
         record: normalized,
         summary: computeBiayaNotaKasirSummary_(normalized),
-              try { Logger.log("[saveBiayaNotaKasir] wrote row for: " + cabangId); } catch (e) {}
-              var _nota_elapsed = Date.now() - _nota_start;
-              try { Logger.log("[saveBiayaNotaKasir] end: " + cabangId + " elapsedMs=" + _nota_elapsed); } catch (e) {}
-              return {
-                ok: true,
-                data: {
-                  record: normalized,
-                  summary: computeBiayaNotaKasirSummary_(normalized),
-                },
-              };
-// ============================================================================
-              try { Logger.log("[saveBiayaNotaKasir] error: " + (err && err.message ? err.message : String(err))); } catch (e) {}
-              return notaKasirErrorResponse_(err, "saveBiayaKasir");
-// ============================================================================
-
-function normalizeBiayaNotaKasirRecord_(input, cabangId) {
-  const base = defaultBiayaNotaKasirRecord_(cabangId);
-  const out = defaultBiayaNotaKasirRecord_(cabangId);
-
-  out.id = toSafeString_(input && input.id, base.id, 80);
-  out.cabangId = cabangId;
-  out.sistemNotaKasir = toSafeString_(input && input.sistemNotaKasir, base.sistemNotaKasir, 40);
-  if (!["aplikasi_kasir_thermal", "nota_manual_ncr"].includes(out.sistemNotaKasir)) {
-    out.sistemNotaKasir = base.sistemNotaKasir;
+      },
+    };
+  } catch (err) {
+    return notaKasirErrorResponse_(err, "saveBiayaNotaKasir");
   }
-
-  out.metodeBiayaAplikasi = toSafeString_(input && input.metodeBiayaAplikasi, base.metodeBiayaAplikasi, 40);
-  if (!["biaya_langsung_per_transaksi", "biaya_bulanan_dibagi_transaksi", "gratis_tanpa_biaya_admin"].includes(out.metodeBiayaAplikasi)) {
-    out.metodeBiayaAplikasi = base.metodeBiayaAplikasi;
-  }
-
-  out.biayaPerTransaksi = clamp_(toNumber_(input && input.biayaPerTransaksi, base.biayaPerTransaksi), 0, 100000000);
+}se.biayaPerTransaksi), 0, 100000000);
   out.biayaBulananAplikasi = clamp_(toNumber_(input && input.biayaBulananAplikasi, base.biayaBulananAplikasi), 0, 100000000);
   out.estimasiTransaksiPerBulan = clamp_(toNumber_(input && input.estimasiTransaksiPerBulan, base.estimasiTransaksiPerBulan), 0, 100000000);
   out.hargaPerRoll = clamp_(toNumber_(input && input.hargaPerRoll, base.hargaPerRoll), 0, 100000000);
