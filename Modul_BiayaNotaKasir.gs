@@ -147,7 +147,13 @@ function getBiayaNotaKasir(cabangId) {
     if (!cabangId || typeof cabangId !== "string") {
       return { ok: false, error: "ID cabang tidak valid.", stage: "getBiayaNotaKasir:validate_cabang_id" };
     }
-    ensureMigrated_();
+    if (typeof ensureMigrated_ === "function") {
+      try {
+        ensureMigrated_();
+      } catch (e) {
+        console.warn("[NotaKasir] ensureMigrated_ gagal, melanjutkan tanpa migrasi:", e);
+      }
+    }
 
     const cabang = getCabangInfo_(cabangId);
     const sheet = getBiayaNotaKasirSheet_();
