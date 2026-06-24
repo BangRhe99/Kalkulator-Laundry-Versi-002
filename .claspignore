@@ -6,8 +6,9 @@
 !Modul_BiayaAir.gs
 !Modul_BiayaGas.gs
 !Modul_BiayaListrik.gs
+!Modul_BiayaNotaKasir.gs
 !Modul_Cabang.gs
+!Modul_StrukturBiayaHPP.gs
 !Util_Penyimpanan.gs
 !Util_Umum.gs
 !appsscript.json
-!Modul_BiayaNotaKasir.gs

@@ -814,6 +814,173 @@
   }
 
   .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+/* ---------------------------------------------------------------------- */
+/* STRUKTUR BIAYA HPP                                                     */
+/* ---------------------------------------------------------------------- */
+
+.hpp-structure-head {
+  margin-bottom: 16px;
+}
+
+.hpp-structure-title {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin-bottom: 6px;
+}
+
+.hpp-structure-desc {
+  font-size: 12.5px;
+  color: var(--text-faint);
+  line-height: 1.5;
+}
+
+.hpp-warning-box {
+  background: rgba(217, 162, 75, 0.08);
+  border: 1px solid var(--brass-dim);
+  border-radius: var(--radius-lg);
+  padding: 14px;
+  margin-bottom: 14px;
+}
+
+.hpp-warning-title {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--brass);
+  margin-bottom: 8px;
+}
+
+.hpp-warning-box ul {
+  padding-left: 18px;
+}
+
+.hpp-warning-box li {
+  font-size: 12px;
+  color: var(--text-dim);
+  line-height: 1.5;
+  margin-bottom: 4px;
+}
+
+.hpp-service-card {
+  background: linear-gradient(165deg, var(--panel) 0%, var(--panel-2) 100%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 18px;
+  margin-bottom: 14px;
+  overflow: hidden;
+}
+
+.hpp-service-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.hpp-service-name {
+  font-family: var(--font-display);
+  font-size: 15.5px;
+  font-weight: 700;
+}
+
+.hpp-service-unit {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--text-faint);
+  margin-top: 4px;
+}
+
+.hpp-service-total {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.hpp-total-label {
+  font-size: 10.5px;
+  color: var(--text-faint);
+  margin-bottom: 4px;
+}
+
+.hpp-total-value {
+  font-family: var(--font-display);
+  font-size: 21px;
+  line-height: 1.1;
+  font-weight: 800;
+  color: var(--sage);
+}
+
+.hpp-component-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.hpp-component-row {
+  background: rgba(255,255,255,0.025);
+  border: 1px solid rgba(255,255,255,0.04);
+  border-radius: var(--radius);
+  padding: 10px 11px;
+}
+
+.hpp-component-line {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 10px;
+  align-items: baseline;
+  margin-bottom: 7px;
+}
+
+.hpp-component-name {
+  font-size: 12.5px;
+  color: var(--text-dim);
+  min-width: 0;
+}
+
+.hpp-component-amount {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: var(--text);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.hpp-component-percent {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--brass);
+  white-space: nowrap;
+}
+
+.hpp-progress {
+  height: 5px;
+  background: var(--border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.hpp-progress-fill {
+  height: 100%;
+  background: var(--sage);
+  border-radius: 999px;
+}
+
+.hpp-component-note {
+  font-size: 10.8px;
+  color: var(--text-faint);
+  margin-top: 6px;
+  line-height: 1.4;
+}
+
+.hpp-loading {
+  text-align: center;
+  color: var(--text-faint);
+  font-size: 13px;
+  padding: 30px 12px;
+}
+
 </style>
 </head>
 <body>
@@ -853,11 +1020,21 @@
           </div>
           <div class="menu-arrow">&#8594;</div>
         </div>
+
         <div class="menu-card tone-flame" onclick="openScreenMasterBiaya()">
           <div class="menu-icon">&#128293;</div>
           <div class="menu-body">
             <div class="menu-title">Master Biaya</div>
             <div class="menu-desc">Hitung Biaya Produksi Per Outlet: Gas LPG, Listrik, Air, Admin/Nota</div>
+          </div>
+          <div class="menu-arrow">&#8594;</div>
+        </div>
+
+        <div class="menu-card tone-volt" onclick="openStrukturHPPOutletList()">
+          <div class="menu-icon">&#128202;</div>
+          <div class="menu-body">
+            <div class="menu-title">Struktur Biaya HPP</div>
+            <div class="menu-desc">Rincian komponen, persentase, dan total Harga Pokok Produksi per outlet.</div>
           </div>
           <div class="menu-arrow">&#8594;</div>
         </div>
@@ -1304,6 +1481,39 @@
       <div class="field-hint" id="notaKasirWarning" style="display:none; margin-top: 8px;"></div>
     </section>
 
+
+    <!-- ===================================================================
+         LAYAR: STRUKTUR BIAYA HPP — pilih outlet
+    =================================================================== -->
+    <section class="screen" id="screenStrukturHPPList">
+      <div class="list-header">
+        <h1>Struktur Biaya HPP</h1>
+        <span class="count" id="strukturHPPOutletCount">0 outlet</span>
+      </div>
+
+      <div class="hpp-structure-desc" style="margin-bottom: 14px;">
+        Pilih outlet untuk melihat rincian HPP cuci, kering, dan cuci kering.
+      </div>
+
+      <div id="strukturHPPOutletList" class="menu-grid"></div>
+    </section>
+
+    <!-- ===================================================================
+         LAYAR: STRUKTUR BIAYA HPP — detail hasil
+    =================================================================== -->
+    <section class="screen" id="screenStrukturHPPDetail">
+      <div class="hpp-structure-head">
+        <div class="hpp-structure-title">Struktur Biaya HPP</div>
+        <div class="hpp-structure-desc">
+          Rincian komponen, persentase, dan total Harga Pokok Produksi per outlet.
+        </div>
+      </div>
+
+      <div id="strukturHPPContent">
+        <div class="hpp-loading">Memuat struktur biaya HPP...</div>
+      </div>
+    </section>
+
   </div>
 </div>
 
@@ -1521,7 +1731,9 @@
     gasForm: "screenGasForm",
     listrikForm: "screenListrikForm",
     airForm: "screenAirForm",
-    notaKasirForm: "screenNotaKasirForm"
+    notaKasirForm: "screenNotaKasirForm",
+    strukturHPPList: "screenStrukturHPPList",
+    strukturHPPDetail: "screenStrukturHPPDetail"
   };
 
   function showScreen(name) {
@@ -1575,6 +1787,14 @@
       refreshBiayaPickCabangList();
       break;
 
+    case "strukturHPPList":
+      showScreen("menu");
+      break;
+
+    case "strukturHPPDetail":
+      openStrukturHPPOutletList();
+      break;
+
     default:
       showScreen("menu");
   }
@@ -1595,7 +1815,14 @@
     var content = document.getElementById("footerContent");
     content.innerHTML = "";
 
-    if (view.screen === "menu" || view.screen === "list" || view.screen === "masterBiaya" || view.screen === "gasList") {
+    if (
+      view.screen === "menu" ||
+      view.screen === "list" ||
+      view.screen === "masterBiaya" ||
+      view.screen === "gasList" ||
+      view.screen === "strukturHPPList" ||
+      view.screen === "strukturHPPDetail"
+    ) {
       bar.style.display = "none";
       return;
     }
@@ -3458,6 +3685,259 @@ function renderAirPreview() {
     .saveBiayaAir(view.airCabangId, airFormState);
 }
 window.saveAirForm = saveAirForm;
+
+
+
+  /**
+   * =========================================================================
+   * STRUKTUR BIAYA HPP
+   * -------------------------------------------------------------------------
+   * Frontend hanya melakukan 1 request ke backend:
+   * getStrukturBiayaHPP(cabangId)
+   * Kalkulasi utama tetap berada di Modul_StrukturBiayaHPP.gs.
+   * =========================================================================
+   */
+  window.openStrukturHPPOutletList = function () {
+    showScreen("strukturHPPList");
+
+    var listEl = document.getElementById("strukturHPPOutletList");
+    var countEl = document.getElementById("strukturHPPOutletCount");
+
+    if (!listEl) return;
+
+    listEl.innerHTML =
+      '<div class="hpp-loading">Memuat daftar outlet...</div>';
+
+    function renderFromCache() {
+      var cabangs = Array.isArray(cabangListCache) ? cabangListCache : [];
+
+      if (countEl) {
+        countEl.textContent = cabangs.length + " outlet";
+      }
+
+      if (!cabangs.length) {
+        listEl.innerHTML =
+          '<div class="empty-state">' +
+            '<div class="icon">&#127981;</div>' +
+            '<p>Belum ada outlet. Silakan buat Cabang &amp; Lokasi terlebih dahulu.</p>' +
+          '</div>';
+        return;
+      }
+
+      listEl.innerHTML = cabangs.map(function (cabang) {
+        var namaLaundry =
+          cabang && cabang.profil && cabang.profil.namaLaundry
+            ? cabang.profil.namaLaundry
+            : "Outlet tanpa nama";
+
+        return (
+          '<div class="menu-card tone-volt" onclick="openStrukturHPPDetail(\'' + escapeJsAttr(cabang.id) + '\')">' +
+            '<div class="menu-icon">&#128202;</div>' +
+            '<div class="menu-body">' +
+              '<div class="menu-title">' + escapeHtml(namaLaundry) + '</div>' +
+              '<div class="menu-desc">Lihat rincian HPP cuci, kering, dan cuci kering.</div>' +
+            '</div>' +
+            '<div class="menu-arrow">&#8594;</div>' +
+          '</div>'
+        );
+      }).join("");
+    }
+
+    if (Array.isArray(cabangListCache) && cabangListCache.length) {
+      renderFromCache();
+      return;
+    }
+
+    google.script.run
+      .withSuccessHandler(function (res) {
+        if (!res || !res.ok) {
+          handleBackendError(res, "memuat daftar outlet Struktur Biaya HPP");
+          listEl.innerHTML =
+            '<div class="empty-state">' +
+              '<div class="icon">&#9888;</div>' +
+              '<p>Gagal memuat daftar outlet.</p>' +
+            '</div>';
+          return;
+        }
+
+        cabangListCache = Array.isArray(res.data) ? res.data : [];
+        renderFromCache();
+      })
+      .withFailureHandler(function (err) {
+        handleBackendError(
+          {
+            error: err && err.message ? err.message : String(err),
+            stage: "client:strukturHPP:listCabang"
+          },
+          "memuat daftar outlet Struktur Biaya HPP"
+        );
+
+        listEl.innerHTML =
+          '<div class="empty-state">' +
+            '<div class="icon">&#9888;</div>' +
+            '<p>Gagal memuat daftar outlet.</p>' +
+          '</div>';
+      })
+      .listCabang();
+  };
+
+  window.openStrukturHPPDetail = function (cabangId) {
+    if (!cabangId) {
+      showToast("ID outlet tidak valid.", "err");
+      return;
+    }
+
+    showScreen("strukturHPPDetail");
+
+    var contentEl = document.getElementById("strukturHPPContent");
+    if (!contentEl) return;
+
+    contentEl.innerHTML =
+      '<div class="hpp-loading">Memuat struktur biaya HPP...</div>';
+
+    setSaveStatus("Menghitung...", "busy");
+
+    google.script.run
+      .withSuccessHandler(function (res) {
+        if (!res || !res.ok) {
+          handleBackendError(res, "memuat Struktur Biaya HPP");
+          contentEl.innerHTML =
+            '<div class="empty-state">' +
+              '<div class="icon">&#9888;</div>' +
+              '<p>' + escapeHtml(res && res.error ? res.error : "Gagal memuat Struktur Biaya HPP.") + '</p>' +
+            '</div>';
+          setSaveStatus("Gagal", "err");
+          return;
+        }
+
+        renderStrukturHPP(res.data);
+        setSaveStatus("Tersimpan", "ok");
+      })
+      .withFailureHandler(function (err) {
+        handleBackendError(
+          {
+            error: err && err.message ? err.message : String(err),
+            stage: "client:strukturHPP:getStrukturBiayaHPP"
+          },
+          "memuat Struktur Biaya HPP"
+        );
+
+        contentEl.innerHTML =
+          '<div class="empty-state">' +
+            '<div class="icon">&#9888;</div>' +
+            '<p>' + escapeHtml(err && err.message ? err.message : String(err)) + '</p>' +
+          '</div>';
+        setSaveStatus("Gagal", "err");
+      })
+      .getStrukturBiayaHPP(cabangId);
+  };
+
+  function renderStrukturHPP(data) {
+    var contentEl = document.getElementById("strukturHPPContent");
+    if (!contentEl) return;
+
+    data = data || {};
+
+    var cabang = data.cabang || {};
+    var layanan = Array.isArray(data.layanan) ? data.layanan : [];
+    var warnings = Array.isArray(data.warnings) ? data.warnings : [];
+
+    var warningHtml = warnings.length
+      ? (
+        '<div class="hpp-warning-box">' +
+          '<div class="hpp-warning-title">Catatan Data</div>' +
+          '<ul>' +
+            warnings.map(function (w) {
+              return '<li>' + escapeHtml(w) + '</li>';
+            }).join("") +
+          '</ul>' +
+        '</div>'
+      )
+      : "";
+
+    var serviceHtml = layanan.length
+      ? layanan.map(renderStrukturHPPServiceCard).join("")
+      : (
+        '<div class="empty-state">' +
+          '<div class="icon">&#128202;</div>' +
+          '<p>Belum ada hasil Struktur Biaya HPP untuk outlet ini.</p>' +
+        '</div>'
+      );
+
+    contentEl.innerHTML =
+      '<div class="summary-hero">' +
+        '<div class="summary-eyebrow">SELF SERVICE LAUNDRY</div>' +
+        '<div class="summary-title">' + escapeHtml(cabang.namaLaundry || "Outlet") + '</div>' +
+        '<div class="summary-meta">' +
+          '<span>Satuan: <b>' + escapeHtml(data.satuan || "per load") + '</b></span>' +
+          '<span>Sumber air: <b>' + escapeHtml(data.sumberAir || "-") + '</b></span>' +
+        '</div>' +
+      '</div>' +
+      warningHtml +
+      serviceHtml;
+  }
+
+  function renderStrukturHPPServiceCard(service) {
+    service = service || {};
+    var components = Array.isArray(service.components) ? service.components : [];
+
+    return (
+      '<div class="hpp-service-card">' +
+        '<div class="hpp-service-top">' +
+          '<div>' +
+            '<div class="hpp-service-name">' + escapeHtml(service.title || "HPP") + '</div>' +
+            '<div class="hpp-service-unit">' + escapeHtml(service.unitLabel || "per load") + '</div>' +
+          '</div>' +
+          '<div class="hpp-service-total">' +
+            '<div class="hpp-total-label">Total HPP</div>' +
+            '<div class="hpp-total-value">' + formatRupiahTanpaDesimal(service.total || 0) + '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="hpp-component-list">' +
+          components.map(renderStrukturHPPComponentRow).join("") +
+        '</div>' +
+      '</div>'
+    );
+  }
+
+  function renderStrukturHPPComponentRow(item) {
+    item = item || {};
+
+    var percent = Number(item.percent || 0);
+    var safePercent = Math.max(0, Math.min(100, isFinite(percent) ? percent : 0));
+
+    return (
+      '<div class="hpp-component-row">' +
+        '<div class="hpp-component-line">' +
+          '<div class="hpp-component-name">' + escapeHtml(item.label || "Komponen") + '</div>' +
+          '<div class="hpp-component-amount">' + formatRupiahTanpaDesimal(item.amount || 0) + '</div>' +
+          '<div class="hpp-component-percent">' + safePercent.toFixed(2) + '%</div>' +
+        '</div>' +
+        '<div class="hpp-progress">' +
+          '<div class="hpp-progress-fill" style="width:' + safePercent + '%;"></div>' +
+        '</div>' +
+        (item.note ? '<div class="hpp-component-note">' + escapeHtml(item.note) + '</div>' : '') +
+      '</div>'
+    );
+  }
+
+  function formatRupiahTanpaDesimal(value) {
+    var num = Number(value || 0);
+    if (!isFinite(num)) num = 0;
+
+    return "Rp " + num.toLocaleString("id-ID", {
+      maximumFractionDigits: 0
+    });
+  }
+
+  function escapeJsAttr(value) {
+    return String(value === null || value === undefined ? "" : value)
+      .replace(/\\/g, "\\\\")
+      .replace(/'/g, "\\'")
+      .replace(/"/g, "&quot;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+  }
 
 
   document.addEventListener("DOMContentLoaded", function () {
