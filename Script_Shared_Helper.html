@@ -1,0 +1,48 @@
+/**
+ * =========================================================================
+ * FILE: Script_Shared_Helper.html
+ * FUNGSI: Helper umum untuk HTML, angka, object, dan array.
+ * BATAS: Tidak berisi logic HPP, Fixed Cost, Harga Layanan, atau rumus fitur.
+ * =========================================================================
+ */
+
+function escapeHtml(value) {
+  var div = document.createElement("div");
+  div.textContent = (value == null) ? "" : String(value);
+  return div.innerHTML;
+}
+
+function toNumber(value, fallback) {
+  var num = Number(value);
+  if (isFinite(num)) return num;
+  return (fallback == null) ? 0 : fallback;
+}
+
+function round2(value) {
+  var num = Number(value);
+  if (!isFinite(num)) return 0;
+  return Math.round((num + Number.EPSILON) * 100) / 100;
+}
+
+function pad2(value) {
+  var num = Number(value) || 0;
+  return num < 10 ? "0" + num : String(num);
+}
+
+function safeArray(value) {
+  return Array.isArray(value) ? value : [];
+}
+
+function safeObject(value) {
+  return value && typeof value === "object" && !Array.isArray(value) ? value : {};
+}
+
+function findById(rows, id) {
+  return safeArray(rows).find(function (item) {
+    return item && item.id === id;
+  }) || null;
+}
+
+function cloneObject(value) {
+  return JSON.parse(JSON.stringify(value || {}));
+}

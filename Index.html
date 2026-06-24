@@ -2,22 +2,23 @@
 ===============================================================================
 FILE: Index.html
 PROJECT: Kalkulator Laundry Versi 002
-TAHAP: 2 — Pecah CSS Global
+TAHAP: 5 — Pecah Script Shared
 
 FUNGSI FILE SAAT INI:
-File utama web app yang sudah mulai memakai include untuk CSS global.
+File utama web app yang sudah memakai include CSS, screen, dan script shared.
 
-PERUBAHAN TAHAP 2:
-1. Design token global dipindah ke Style_Tokens.html.
-2. CSS dasar aplikasi dipindah ke Style_Base.html.
-3. CSS komponen umum dipindah ke Style_Components.html.
-4. CSS khusus fitur masih tetap di Index.html untuk menjaga stabilitas.
+PERUBAHAN TAHAP 5:
+1. Fungsi formatter umum dipindah ke Script_Shared_Formatter.html.
+2. Fungsi helper umum dipindah ke Script_Shared_Helper.html.
+3. Fungsi UI umum dipindah ke Script_Shared_UI.html.
+4. Fungsi validasi umum disiapkan di Script_Shared_Validator.html.
+5. Logic fitur HPP, Fixed Cost, dan Harga Layanan tetap berada di modul asal.
 
 BATAS TANGGUNG JAWAB:
-- Tahap ini tidak menyentuh HTML screen.
-- Tahap ini tidak menyentuh JavaScript.
-- Tahap ini tidak mengubah logic fitur.
-- Tahap ini hanya memindahkan CSS global.
+- Tahap ini tidak mengubah ID elemen.
+- Tahap ini tidak memasukkan logic fitur ke file shared.
+- Tahap ini hanya memindahkan fungsi umum yang dipakai lintas modul.
+- Formula HPP, Fixed Cost, dan Harga Layanan tetap di file modul masing-masing.
 
 CATATAN PENTING:
 Jangan menulis syntax template Apps Script di dalam komentar HTML.
@@ -697,6 +698,11 @@ Setelah tahap ini dites aman, tahap berikutnya adalah memecah CSS per fitur.
 (function () {
   "use strict";
 
+  <?!= include('Script_Shared_Formatter'); ?>
+  <?!= include('Script_Shared_Helper'); ?>
+  <?!= include('Script_Shared_UI'); ?>
+  <?!= include('Script_Shared_Validator'); ?>
+
   /**
    * =========================================================================
    * STATE NAVIGASI
@@ -750,45 +756,7 @@ Setelah tahap ini dites aman, tahap berikutnya adalah memecah CSS per fitur.
     return "local_" + Date.now() + "_" + localIdCounter;
   }
 
-  function round2(n) {
-    if (!isFinite(n)) return 0;
-    return Math.round((n + Number.EPSILON) * 100) / 100;
-  }
-  function formatNum(n) {
-    return round2(n).toLocaleString("id-ID", { maximumFractionDigits: 1 });
-  }
-  function formatRupiah(n) {
-    var v = isFinite(n) ? n : 0;
-    return "Rp " + v.toLocaleString("id-ID", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  }
-  function pad2(n) { return n < 10 ? "0" + n : String(n); }
-
-  function showToast(message, kind) {
-    var el = document.getElementById("toast");
-    el.textContent = message;
-    el.className = "toast show" + (kind ? " " + kind : "");
-    window.clearTimeout(showToast._t);
-    showToast._t = window.setTimeout(function () { el.className = "toast"; }, 3200);
-  }
-  function setSaveStatus(text, kind) {
-    var el = document.getElementById("saveStatus");
-    el.textContent = text;
-    el.className = "save-status" + (kind ? " " + kind : "");
-  }
-
-  /**
-   * handleBackendError adalah SATU-SATUNYA tempat error dari google.script.run
-   * ditampilkan ke user. "stage" dari backend (lihat Code.gs errorResponse_)
-   * disisipkan ke console.error agar saat debugging, pengembang tinggal buka
-   * console browser dan langsung tahu fungsi+titik gagalnya tanpa reproduce.
-   */
-  function handleBackendError(res, actionLabel) {
-    var msg = (res && res.error) ? res.error : "Terjadi kesalahan tidak dikenal.";
-    var stage = (res && res.stage) ? res.stage : "unknown_stage";
-    console.error("[Kalkulator Laundry] Gagal " + actionLabel + " (stage: " + stage + "): " + msg);
-    showToast("Gagal " + actionLabel + ": " + msg, "err");
-    setSaveStatus("Gagal", "err");
-  }
+  /* Fungsi umum tahap 5 dipindahkan ke file Script_Shared_*.html. */
 
   function computeDurasiOperasional(bukaMenit, tutupMenit) {
     var total = (Number(tutupMenit) || 0) - (Number(bukaMenit) || 0);
@@ -1250,11 +1218,7 @@ Setelah tahap ini dites aman, tahap berikutnya adalah memecah CSS per fitur.
     });
   }
 
-  function escapeHtml(s) {
-    var div = document.createElement("div");
-    div.textContent = s;
-    return div.innerHTML;
-  }
+  /* Fungsi umum tahap 5 dipindahkan ke file Script_Shared_*.html. */
 
   function openRingkasan(id) {
     showScreen("ringkasan");
@@ -3187,14 +3151,7 @@ window.saveAirForm = saveAirForm;
     );
   }
 
-  function formatRupiahTanpaDesimal(value) {
-    var num = Number(value || 0);
-    if (!isFinite(num)) num = 0;
-
-    return "Rp " + num.toLocaleString("id-ID", {
-      maximumFractionDigits: 0
-    });
-  }
+  /* Fungsi umum tahap 5 dipindahkan ke file Script_Shared_*.html. */
 
   function escapeJsAttr(value) {
     return String(value === null || value === undefined ? "" : value)
@@ -3456,7 +3413,7 @@ window.saveAirForm = saveAirForm;
     return isFinite(n) ? n : 0;
   }
 
-  function money0(n) { return formatRupiahTanpaDesimal(n || 0); }
+  /* Fungsi umum tahap 5 dipindahkan ke file Script_Shared_*.html. */
 
   window.refreshBiayaTetapPreview = function () {
     var payload = collectBiayaTetapPayload();

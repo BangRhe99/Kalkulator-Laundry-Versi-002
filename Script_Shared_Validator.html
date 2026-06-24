@@ -1,0 +1,61 @@
+/**
+ * =========================================================================
+ * FILE: Script_Shared_Validator.html
+ * FUNGSI: Validasi umum angka, ID, dan input dasar.
+ * BATAS: Tidak berisi validasi khusus HPP, Fixed Cost, Harga Layanan, atau rumus fitur.
+ * =========================================================================
+ */
+
+function isValidNumber(value) {
+  return isFinite(Number(value));
+}
+
+function validateNumber(value, options) {
+  var opt = safeObject(options);
+  var num = Number(value);
+
+  if (!isFinite(num)) {
+    return { ok: false, value: 0, message: opt.message || "Input harus berupa angka." };
+  }
+  if (opt.min != null && num < Number(opt.min)) {
+    return { ok: false, value: num, message: opt.minMessage || "Input tidak boleh lebih kecil dari " + opt.min + "." };
+  }
+  if (opt.max != null && num > Number(opt.max)) {
+    return { ok: false, value: num, message: opt.maxMessage || "Input tidak boleh lebih besar dari " + opt.max + "." };
+  }
+
+  return { ok: true, value: num, message: "" };
+}
+
+function isValidId(value) {
+  return typeof value === "string" && value.trim().length > 0;
+}
+
+function validateId(value, label) {
+  if (isValidId(value)) {
+    return { ok: true, value: value.trim(), message: "" };
+  }
+
+  return {
+    ok: false,
+    value: "",
+    message: (label || "ID") + " belum valid."
+  };
+}
+
+function validateRequired(value, label) {
+  var text = (value == null) ? "" : String(value).trim();
+  if (text) return { ok: true, value: text, message: "" };
+
+  return {
+    ok: false,
+    value: "",
+    message: (label || "Input") + " wajib diisi."
+  };
+}
+
+function getInputNumber(id, fallback) {
+  var el = document.getElementById(id);
+  if (!el) return (fallback == null) ? 0 : fallback;
+  return toNumber(el.value, fallback);
+}

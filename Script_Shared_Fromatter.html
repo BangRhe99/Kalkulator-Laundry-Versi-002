@@ -1,0 +1,57 @@
+/**
+ * =========================================================================
+ * FILE: Script_Shared_Formatter.html
+ * FUNGSI: Formatter angka, rupiah, dan persentase lintas modul.
+ * BATAS: Tidak berisi logic HPP, Fixed Cost, Harga Layanan, atau rumus fitur.
+ * =========================================================================
+ */
+
+function formatRp(value) {
+  var num = Number(value || 0);
+  if (!isFinite(num)) num = 0;
+
+  return "Rp " + num.toLocaleString("id-ID", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+}
+
+// Alias kompatibilitas untuk kode lama.
+function formatRupiah(value) {
+  return formatRp(value);
+}
+
+function money0(value) {
+  var num = Number(value || 0);
+  if (!isFinite(num)) num = 0;
+
+  return "Rp " + num.toLocaleString("id-ID", {
+    maximumFractionDigits: 0
+  });
+}
+
+// Alias kompatibilitas untuk modul HPP/Harga Layanan yang sudah berjalan.
+function formatRupiahTanpaDesimal(value) {
+  return money0(value);
+}
+
+function formatNum(value, maxFractionDigits) {
+  var digit = (maxFractionDigits == null) ? 1 : Number(maxFractionDigits);
+  if (!isFinite(digit) || digit < 0) digit = 1;
+
+  return round2(value).toLocaleString("id-ID", {
+    maximumFractionDigits: digit
+  });
+}
+
+function formatPercent(value, maxFractionDigits) {
+  var digit = (maxFractionDigits == null) ? 2 : Number(maxFractionDigits);
+  if (!isFinite(digit) || digit < 0) digit = 2;
+
+  var num = Number(value || 0);
+  if (!isFinite(num)) num = 0;
+
+  return num.toLocaleString("id-ID", {
+    maximumFractionDigits: digit
+  }) + "%";
+}
