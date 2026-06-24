@@ -1021,6 +1021,35 @@
 .fc-warning-box { background: rgba(217,162,75,0.08); border: 1px solid var(--brass-dim); border-radius: var(--radius-lg); padding: 14px; margin-bottom: 14px; }
 .fc-warning-box .title { font-family: var(--font-display); font-size: 13px; font-weight: 700; color: var(--brass); margin-bottom: 8px; }
 .fc-warning-box li { font-size: 12px; color: var(--text-dim); line-height: 1.5; margin-left: 18px; margin-bottom: 4px; }
+
+/* Ringkasan fixed cost langsung di daftar outlet */
+.fc-list-summary {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+.fc-list-summary-top {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.fc-list-metric {
+  background: rgba(255,255,255,0.025);
+  border: 1px solid rgba(255,255,255,0.04);
+  border-radius: var(--radius);
+  padding: 9px 10px;
+}
+.fc-list-metric .label { font-size: 10px; color: var(--text-faint); margin-bottom: 4px; }
+.fc-list-metric .value { font-family: var(--font-display); font-size: 16px; font-weight: 800; color: var(--text); }
+.fc-list-metric.highlight { border-color: var(--brass-dim); background: rgba(217,162,75,0.07); }
+.fc-list-metric.highlight .value { color: var(--brass); }
+.fc-list-breakdown { display: flex; flex-direction: column; gap: 4px; }
+.fc-list-breakdown-row { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-size: 11.5px; }
+.fc-list-breakdown-row .k { color: var(--text-faint); }
+.fc-list-breakdown-row .v { font-family: var(--font-mono); color: var(--text-dim); font-weight: 700; white-space: nowrap; }
+.fc-list-empty-note { margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.06); font-size: 11.5px; color: var(--text-faint); line-height: 1.45; }
+@media (max-width: 520px) { .fc-list-summary-top { grid-template-columns: 1fr; } }
 @media (max-width: 520px) { .fc-grid-2, .fc-input-grid, .fc-input-grid.three, .fc-summary-grid { grid-template-columns: 1fr; } }
 
 </style>
@@ -4076,13 +4105,13 @@ window.saveAirForm = saveAirForm;
     var countEl = document.getElementById("biayaTetapOutletCount");
     if (!listEl) return;
 
-    listEl.innerHTML = '<div class="empty-hint">Memuat daftar outlet...</div>';
+    listEl.innerHTML = '<div class="empty-hint">Memuat rangkuman fixed cost outlet...</div>';
     if (countEl) countEl.textContent = "memuat...";
 
     google.script.run
       .withSuccessHandler(function (res) {
         if (!res || !res.ok) {
-          handleBackendError(res, "memuat daftar outlet biaya tetap");
+          handleBackendError(res, "memuat rangkuman biaya tetap outlet");
           listEl.innerHTML = "";
           return;
         }
@@ -4091,10 +4120,10 @@ window.saveAirForm = saveAirForm;
         renderBiayaTetapOutletList();
       })
       .withFailureHandler(function (err) {
-        handleBackendError({ error: err && err.message ? err.message : String(err), stage: "client:listCabang(biayaTetap)" }, "memuat daftar outlet biaya tetap");
+        handleBackendError({ error: err && err.message ? err.message : String(err), stage: "client:listBiayaTetapOutletSummaries" }, "memuat rangkuman biaya tetap outlet");
         listEl.innerHTML = "";
       })
-      .listCabang();
+      .listBiayaTetapOutletSummaries();
   };
 
   function renderBiayaTetapOutletList() {
@@ -4111,12 +4140,35 @@ window.saveAirForm = saveAirForm;
     }
 
     listEl.innerHTML = rows.map(function (item) {
+      var cabang = item.cabang || item || {};
+      var summary = item.summary || {};
+      var components = Array.isArray(summary.components) ? summary.components : [];
+      var total = Number(summary.totalPerBulan || 0);
+      var perHari = Number(summary.totalPerHari || 0);
+      var hasData = item.hasData || total > 0;
+      var breakdownHtml = components.map(function (component) {
+        return '<div class="fc-list-breakdown-row"><span class="k">' + escapeHtml(component.label || '-') + '</span><span class="v">' + money0(component.amount || 0) + '</span></div>';
+      }).join("");
+
+      var summaryHtml = hasData ? (
+        '<div class="fc-list-summary">' +
+          '<div class="fc-list-summary-top">' +
+            '<div class="fc-list-metric highlight"><div class="label">Total fixed cost / bulan</div><div class="value">' + money0(total) + '</div></div>' +
+            '<div class="fc-list-metric"><div class="label">Estimasi / hari</div><div class="value">' + money0(perHari) + '</div></div>' +
+          '</div>' +
+          '<div class="fc-list-breakdown">' + breakdownHtml + '</div>' +
+        '</div>'
+      ) : (
+        '<div class="fc-list-empty-note">Belum ada data fixed cost. Klik outlet ini untuk mulai mengisi sewa, gaji, internet, depresiasi, perawatan, dan biaya rutin lainnya.</div>'
+      );
+
       return '' +
-        '<div class="menu-card tone-sage" onclick="openBiayaTetapOutletForm(\'' + escapeJsAttr(item.id) + '\')">' +
+        '<div class="menu-card tone-sage" onclick="openBiayaTetapOutletForm(\'' + escapeJsAttr(cabang.id) + '\')">' +
           '<div class="menu-icon">&#128179;</div>' +
           '<div class="menu-body">' +
-            '<div class="menu-title">' + escapeHtml(item.namaLaundry || "(Tanpa nama)") + '</div>' +
+            '<div class="menu-title">' + escapeHtml(cabang.namaLaundry || "(Tanpa nama)") + '</div>' +
             '<div class="menu-desc">Catat sewa, gaji, internet, depresiasi mesin, perawatan dan biaya rutin lainnya.</div>' +
+            summaryHtml +
           '</div>' +
           '<div class="menu-arrow">&#8594;</div>' +
         '</div>';

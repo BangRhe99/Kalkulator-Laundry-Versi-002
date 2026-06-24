@@ -10,6 +10,7 @@
  * - Modul ini hanya menyimpan input fixed cost dan input depresiasi per mesin.
  *
  * PUBLIC FUNCTIONS:
+ * - listBiayaTetapOutletSummaries()
  * - getBiayaTetapOutlet(cabangId)
  * - saveBiayaTetapOutlet(cabangId, payload)
  * - deleteBiayaTetapOutlet(cabangId)
@@ -35,6 +36,77 @@ const BIAYA_TETAP_HEADERS_ = [
 // ============================================================================
 // SECTION: PUBLIC FUNCTIONS
 // ============================================================================
+
+/**
+ * Mengambil daftar outlet beserta rangkuman fixed cost.
+ * Dipakai untuk menampilkan total biaya tetap langsung di halaman depan
+ * tanpa membuka form input satu per satu.
+ */
+function listBiayaTetapOutletSummaries() {
+  try {
+    if (typeof listCabang !== "function") {
+      return {
+        ok: false,
+        error: "Fungsi listCabang belum tersedia.",
+        stage: "listBiayaTetapOutletSummaries:listCabang_missing"
+      };
+    }
+
+    const cabangRes = listCabang();
+    if (!cabangRes || !cabangRes.ok) {
+      return {
+        ok: false,
+        error: cabangRes && cabangRes.error ? cabangRes.error : "Gagal membaca daftar cabang.",
+        stage: cabangRes && cabangRes.stage ? cabangRes.stage : "listBiayaTetapOutletSummaries:listCabang"
+      };
+    }
+
+    const cabangRows = Array.isArray(cabangRes.data) ? cabangRes.data : [];
+    const sheet = getBiayaTetapSheet_();
+    const recordMap = getBiayaTetapRecordMapByCabangId_(sheet);
+
+    const rows = cabangRows.map(function (item) {
+      const cabangId = item && item.id ? String(item.id) : "";
+      const cabang = getBiayaTetapCabang_(cabangId);
+      const safeCabang = cabang && cabang.id ? cabang : {
+        id: cabangId,
+        namaLaundry: item && item.namaLaundry ? String(item.namaLaundry) : "",
+        mesinCuci: [],
+        mesinPengering: []
+      };
+
+      let record;
+      let hasData = false;
+
+      if (recordMap[cabangId]) {
+        record = normalizeBiayaTetapRecord_(recordMap[cabangId], cabangId, safeCabang);
+        hasData = true;
+      } else {
+        record = defaultBiayaTetapRecord_(cabangId, safeCabang);
+      }
+
+      record.depresiasiRows = syncDepresiasiRowsWithProfil_(record.depresiasiRows, safeCabang);
+
+      return {
+        cabang: {
+          id: safeCabang.id || cabangId,
+          namaLaundry: safeCabang.namaLaundry || ""
+        },
+        hasData: hasData,
+        updatedAt: record.updatedAt || null,
+        summary: computeBiayaTetapSummary_(record),
+        warnings: validateBiayaTetapWarnings_(record, safeCabang)
+      };
+    });
+
+    return {
+      ok: true,
+      data: rows
+    };
+  } catch (err) {
+    return biayaTetapErrorResponse_(err, "listBiayaTetapOutletSummaries");
+  }
+}
 
 function getBiayaTetapOutlet(cabangId) {
   try {
@@ -576,6 +648,20 @@ function findBiayaTetapRowFast_(sheet, cabangId) {
   }
 
   return -1;
+}
+
+function getBiayaTetapRecordMapByCabangId_(sheet) {
+  const map = {};
+  const lastRow = sheet.getLastRow();
+  if (lastRow < 2) return map;
+
+  const values = sheet.getRange(2, 1, lastRow - 1, BIAYA_TETAP_HEADERS_.length).getValues();
+  for (let i = 0; i < values.length; i++) {
+    const obj = rowArrayToBiayaTetapObject_(values[i]);
+    const cabangId = obj && obj.cabangId ? String(obj.cabangId) : "";
+    if (cabangId) map[cabangId] = obj;
+  }
+  return map;
 }
 
 function rowArrayToBiayaTetapObject_(values) {
