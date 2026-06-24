@@ -4,9 +4,12 @@
  * Code.gs — ENTRY POINT & KONSTANTA SKEMA GLOBAL — Schema v4
  * ============================================================================
  *
- * FILE INI SENGAJA DIBUAT SANGAT RINGKAS. Tugasnya hanya dua:
+ * FILE INI SENGAJA DIBUAT SANGAT RINGKAS. Tugasnya hanya tiga:
  *   1. doGet() — satu-satunya pintu masuk web app, merender Index.html.
- *   2. Konstanta skema (SCHEMA_VERSION, DATA_SHEET_NAME, KEY_xxx) yang
+ *   2. include() — helper wajib agar Index.html bisa memecah diri lewat
+ *      <?!= include('NamaFile'); ?> (Style_Tokens, Style_Base,
+ *      Style_Components, Screen_*, Script_*, dst).
+ *   3. Konstanta skema (SCHEMA_VERSION, DATA_SHEET_NAME, KEY_xxx) yang
  *      dipakai SEMUA file lain di project ini.
  * Semua logika fitur (CRUD, kalkulasi, validasi) ada di file Modul_*.gs.
  * Semua logika upgrade versi data ada di Migrasi_Skema.gs.
@@ -14,7 +17,7 @@
  * ===========================================================================
  * PETA PROJECT — baca ini dulu sebelum mencari/menambah apapun:
  *
- *   Code.gs                 (file ini) entry point + konstanta skema
+ *   Code.gs                 (file ini) entry point + include() + konstanta skema
  *   Util_Umum.gs            helper murni: sanitasi angka/string, id, rounding,
  *                           bentuk error seragam. TIDAK menyentuh Spreadsheet.
  *   Util_Penyimpanan.gs     SATU-SATUNYA file yang boleh memanggil
@@ -49,6 +52,12 @@
  *          ke objek biayaGas atau biayaListrik yang sudah ada.
  *   - "Saya mau tambah migrasi skema baru (v5)"
  *       -> Migrasi_Skema.gs, baca catatan "CARA MENAMBAH MIGRASI BARU"
+ *   - "Index.html saya tampil mentah tanpa CSS / berantakan total"
+ *       -> cek fungsi include() di bawah ini benar-benar ada dan TIDAK
+ *          terhapus, lalu pastikan setiap nama file yang dipanggil lewat
+ *          <?!= include('NamaFile'); ?> di Index.html PERSIS sama (case
+ *          sensitive, TANPA ekstensi .html) dengan nama file HTML yang
+ *          benar-benar ada di project ini.
  *
  * ATURAN WAJIB UNTUK SEMUA FILE Modul_*.gs (konsisten di seluruh project):
  *   - Setiap fungsi publik (dipanggil dari frontend lewat google.script.run)
@@ -96,4 +105,28 @@ function doGet() {
     .setTitle("Kalkulator Laundry")
     .addMetaTag("viewport", "width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover")
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+}
+
+// ----------------------------------------------------------------------------
+// INCLUDE HELPER — WAJIB ADA, JANGAN DIHAPUS
+// ----------------------------------------------------------------------------
+// Dipanggil dari Index.html (dan dari Screen_*.html / Style_*.html lain bila
+// nanti saling memanggil) lewat sintaks template Apps Script:
+//
+//     <?!= include('Style_Tokens'); ?>
+//
+// Parameter filename HARUS persis sama (case-sensitive) dengan nama file
+// HTML di project ini, TANPA ekstensi ".html" (Apps Script menambahkannya
+// sendiri secara implisit untuk tipe file HTML).
+//
+// Tanpa fungsi ini, SEMUA pemanggilan include(...) di Index.html akan gagal
+// dieksekusi, dan kegagalan itu membuat seluruh proses templating Apps
+// Script berhenti di tengah jalan — efeknya browser menampilkan HTML mentah
+// tanpa CSS/JS sama sekali (persis seperti tampilan polos tanpa styling).
+//
+// Jika menambah file Style_*.html atau Screen_*.html baru di kemudian hari,
+// TIDAK perlu mengubah fungsi ini — cukup pastikan nama yang dipanggil di
+// include('NamaFile') cocok dengan nama file yang dibuat di editor.
+function include(filename) {
+  return HtmlService.createHtmlOutputFromFile(filename).getContent();
 }
