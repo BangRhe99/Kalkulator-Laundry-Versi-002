@@ -3972,6 +3972,34 @@ window.saveAirForm = saveAirForm;
    * Kalkulasi utama tetap berada di Modul_StrukturBiayaHPP.gs.
    * =========================================================================
    */
+  function normalizeOutletRow_(item) {
+    if (!item) return {};
+    return item.cabang || item.outlet || item.profil || item;
+  }
+
+  function getOutletId_(cabang) {
+    cabang = cabang || {};
+    return String(
+      cabang.id ||
+      cabang.cabangId ||
+      cabang.outletId ||
+      cabang.idCabang ||
+      ""
+    ).trim();
+  }
+
+  function getOutletNama_(cabang) {
+    cabang = cabang || {};
+    var profil = cabang.profil || {};
+    return (
+      profil.namaLaundry ||
+      cabang.namaLaundry ||
+      cabang.nama ||
+      cabang.namaCabang ||
+      "Outlet tanpa nama"
+    );
+  }
+
   window.openStrukturHPPOutletList = function () {
     showScreen("strukturHPPList");
 
@@ -3999,14 +4027,13 @@ window.saveAirForm = saveAirForm;
         return;
       }
 
-      listEl.innerHTML = cabangs.map(function (cabang) {
-        var namaLaundry =
-          cabang && cabang.profil && cabang.profil.namaLaundry
-            ? cabang.profil.namaLaundry
-            : "Outlet tanpa nama";
+      listEl.innerHTML = cabangs.map(function (item) {
+        var cabang = normalizeOutletRow_(item);
+        var cabangId = getOutletId_(cabang);
+        var namaLaundry = getOutletNama_(cabang);
 
         return (
-          '<div class="menu-card tone-volt" onclick="openStrukturHPPDetail(\'' + escapeJsAttr(cabang.id) + '\')">' +
+          '<div class="menu-card tone-volt" onclick="openStrukturHPPDetail(\'' + escapeJsAttr(cabangId) + '\')">' +
             '<div class="menu-icon">&#128202;</div>' +
             '<div class="menu-body">' +
               '<div class="menu-title">' + escapeHtml(namaLaundry) + '</div>' +
@@ -4705,17 +4732,19 @@ window.saveAirForm = saveAirForm;
       return;
     }
 
-    listEl.innerHTML = cabangs.map(function (cabang) {
+    listEl.innerHTML = cabangs.map(function (item) {
+      var cabang = normalizeOutletRow_(item);
+      var cabangId = getOutletId_(cabang);
       var namaLaundry = getCabangNamaHargaLayanan(cabang);
       var kategoriText = getCabangKategoriHargaLayanan(cabang);
 
       return (
-        '<div class="menu-card tone-sage" onclick="openHargaLayananDetail(\'' + escapeJsAttr(cabang.id) + '\')">' +
+        '<div class="menu-card tone-sage" onclick="openHargaLayananDetail(\'' + escapeJsAttr(cabangId) + '\')">' +
           '<div class="menu-icon">&#128176;</div>' +
           '<div class="menu-body">' +
             '<div class="menu-title">' + escapeHtml(namaLaundry) + '</div>' +
             '<div class="menu-desc">' + escapeHtml(kategoriText) + '</div>' +
-            '<div class="fc-list-summary" id="hargaLayananSummary_' + escapeHtml(cabang.id) + '">' +
+            '<div class="fc-list-summary" id="hargaLayananSummary_' + escapeHtml(cabangId) + '">' +
               '<div class="fc-list-empty-note" style="margin-top:0; padding-top:0; border-top:none;">Memuat rangkuman harga layanan...</div>' +
             '</div>' +
           '</div>' +
@@ -4742,12 +4771,14 @@ window.saveAirForm = saveAirForm;
   }
 
   function hydrateHargaLayananSummaryCards(cabangs) {
-    cabangs.forEach(function (cabang) {
-      if (!cabang || !cabang.id) return;
+    cabangs.forEach(function (item) {
+      var cabang = normalizeOutletRow_(item);
+      var cabangId = getOutletId_(cabang);
+      if (!cabangId) return;
 
       google.script.run
         .withSuccessHandler(function (res) {
-          var target = document.getElementById("hargaLayananSummary_" + cabang.id);
+          var target = document.getElementById("hargaLayananSummary_" + cabangId);
           if (!target) return;
 
           if (!res || !res.ok || !res.data) {
@@ -4758,12 +4789,12 @@ window.saveAirForm = saveAirForm;
           target.innerHTML = renderHargaLayananSummaryHtml(res.data);
         })
         .withFailureHandler(function () {
-          var target = document.getElementById("hargaLayananSummary_" + cabang.id);
+          var target = document.getElementById("hargaLayananSummary_" + cabangId);
           if (target) {
             target.innerHTML = '<div class="fc-list-empty-note">Rangkuman belum bisa dimuat. Klik outlet untuk membuka detail.</div>';
           }
         })
-        .getHargaLayanan(cabang.id);
+        .getHargaLayanan(cabangId);
     });
   }
 
