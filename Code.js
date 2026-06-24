@@ -4,89 +4,21 @@
  * Code.gs — ENTRY POINT & KONSTANTA SKEMA GLOBAL — Schema v4
  * ============================================================================
  *
- * FILE INI SENGAJA DIBUAT SANGAT RINGKAS. Tugasnya hanya tiga:
- *   1. doGet() — satu-satunya pintu masuk web app, merender Index.html.
- *   2. include() — helper wajib agar Index.html bisa memecah diri lewat
- *      <?!= include('NamaFile'); ?> (Style_Tokens, Style_Base,
- *      Style_Components, Screen_*, Script_*, dst).
- *   3. Konstanta skema (SCHEMA_VERSION, DATA_SHEET_NAME, KEY_xxx) yang
- *      dipakai SEMUA file lain di project ini.
- * Semua logika fitur (CRUD, kalkulasi, validasi) ada di file Modul_*.gs.
- * Semua logika upgrade versi data ada di Migrasi_Skema.gs.
+ * FUNGSI FILE:
+ * 1. doGet() sebagai pintu masuk web app.
+ * 2. include(filename) untuk memanggil file HTML pecahan.
+ * 3. Konstanta skema global.
  *
- * ===========================================================================
- * PETA PROJECT — baca ini dulu sebelum mencari/menambah apapun:
+ * CATATAN PENTING:
+ * Index.html sekarang memakai template Apps Script:
+ * <?!= include('Style_Tokens'); ?>
  *
- *   Code.gs                 (file ini) entry point + include() + konstanta skema
- *   Util_Umum.gs            helper murni: sanitasi angka/string, id, rounding,
- *                           bentuk error seragam. TIDAK menyentuh Spreadsheet.
- *   Util_Penyimpanan.gs     SATU-SATUNYA file yang boleh memanggil
- *                           SpreadsheetApp. Sheet "_data_operasional"
- *                           dipakai sebagai key-value store.
- *   Migrasi_Skema.gs        riwayat & logika upgrade versi skema data.
- *   Modul_Cabang.gs         fitur "Cabang & Lokasi": profil outlet, mesin
- *                           cuci/pengering, kalkulasi kapasitas (load/hari).
- *                           Ini DATA INDUK yang dibaca semua Modul_Biaya*.gs.
- *   Modul_BiayaGas.gs       fitur "Master Biaya > Gas": multi-record per
- *                           cabang, kalkulasi estimasi load & biaya per load.
- *   Modul_BiayaListrik.gs   fitur "Master Biaya > Listrik": satu konfigurasi
- *                           per cabang, kalkulasi Rp/load per baris mesin +
- *                           alokasi pompa air.
+ * Maka doGet() WAJIB memakai:
+ * HtmlService.createTemplateFromFile("Index").evaluate()
  *
- * CARA MENCARI SESUATU DI PROJECT INI:
- *   - "Saya mau ubah cara hitung kapasitas mesin cuci/pengering"
- *       -> Modul_Cabang.gs, cari computeSummary_ / computeGroupLoad_
- *   - "Saya mau ubah rumus biaya gas"
- *       -> Modul_BiayaGas.gs, cari computeBiayaGasSummary_
- *   - "Saya mau ubah rumus biaya listrik / pompa air"
- *       -> Modul_BiayaListrik.gs, cari computeBiayaListrikSummary_ atau
- *          computeListrikBarisMesin_
- *   - "Ada error dari frontend, stage-nya 'createBiayaGas:validate_payload'"
- *       -> nama stage SELALU "namaFungsi:tahapGagal" -> cari namaFungsi-nya
- *          (createBiayaGas) di Modul_BiayaGas.gs
- *   - "Saya mau tambah kategori biaya baru (Air, Deterjen, dst)"
- *       -> baca catatan "CATATAN PENTING UNTUK KATEGORI BIAYA BARU" di
- *          Modul_BiayaGas.gs (kalau multi-record) atau Modul_BiayaListrik.gs
- *          (kalau satu konfigurasi per cabang), lalu buat file baru
- *          Modul_BiayaXxx.gs yang meniru pola itu. JANGAN tambah field baru
- *          ke objek biayaGas atau biayaListrik yang sudah ada.
- *   - "Saya mau tambah migrasi skema baru (v5)"
- *       -> Migrasi_Skema.gs, baca catatan "CARA MENAMBAH MIGRASI BARU"
- *   - "Index.html saya tampil mentah tanpa CSS / berantakan total"
- *       -> cek fungsi include() di bawah ini benar-benar ada dan TIDAK
- *          terhapus, lalu pastikan setiap nama file yang dipanggil lewat
- *          <?!= include('NamaFile'); ?> di Index.html PERSIS sama (case
- *          sensitive, TANPA ekstensi .html) dengan nama file HTML yang
- *          benar-benar ada di project ini.
- *
- * ATURAN WAJIB UNTUK SEMUA FILE Modul_*.gs (konsisten di seluruh project):
- *   - Setiap fungsi publik (dipanggil dari frontend lewat google.script.run)
- *     WAJIB dibungkus try-catch, dan WAJIB mengembalikan bentuk seragam:
- *       sukses -> { ok: true, data: ... }
- *       gagal  -> { ok: false, error: "pesan jelas", stage: "namaFungsi:tahap" }
- *     TIDAK PERNAH throw mentah ke frontend.
- *   - VALIDASI dua lapis: sanitize (bersihkan/lengkapi diam-diam) DULU, lalu
- *     validate (tolak dengan pesan jelas jika melanggar aturan bisnis).
- *   - Kalkulasi (computeXxx_) adalah SUMBER KEBENARAN TUNGGAL. Frontend boleh
- *     punya salinan identik untuk pratinjau instan, tapi modul backend lain
- *     WAJIB memanggil fungsi compute yang sama, JANGAN duplikasi rumus.
- *
- * RIWAYAT SKEMA (detail lengkap tiap versi ada di Migrasi_Skema.gs):
- *   v1 — satu set data operasional per Sheet (tidak ada konsep "cabang").
- *   v2 — multi-cabang, satuan kapasitas LOAD (bukan kg).
- *   v3 — Master Biaya: Gas LPG.
- *   v4 — Master Biaya: Listrik.
- *
- * CATATAN TEKNIS Apps Script (penting dipahami sebelum menambah file baru):
- *   Semua file .gs dalam project ini berbagi SATU global scope yang sama.
- *   Fungsi di file manapun bisa memanggil fungsi di file lain tanpa import,
- *   dan urutan parse antar file TIDAK menjamin urutan tertentu. Ini AMAN
- *   selama (seperti pola di seluruh project ini) semua pemanggilan terjadi
- *   DI DALAM BODY FUNGSI (saat runtime), bukan di top-level scope file.
- *   JANGAN PERNAH menjalankan kode atau memanggil fungsi lain di luar fungsi
- *   (di top-level file), karena itu satu-satunya kondisi yang bisa rusak
- *   akibat urutan parse antar file yang tidak terjamin.
- * ===========================================================================
+ * Jika memakai createHtmlOutputFromFile("Index"), kode <?!= include(...) ?>
+ * akan tampil mentah di browser dan CSS tidak akan terpasang.
+ * ============================================================================
  */
 
 const SCHEMA_VERSION = 4;
@@ -96,37 +28,72 @@ const KEY_CABANG_ORDER = "cabang_order";
 const KEY_BIAYA_GAS_ORDER = "biayaGas_order";
 const KEY_LEGACY_V1 = "operasional_v1";
 
-// ----------------------------------------------------------------------------
-// ENTRY POINT WEB APP
-// ----------------------------------------------------------------------------
-
+/**
+ * Entry point Web App.
+ * Wajib memakai createTemplateFromFile().evaluate()
+ * agar syntax template <?!= include(...) ?> diproses oleh Apps Script.
+ */
 function doGet() {
-  return HtmlService.createHtmlOutputFromFile("Index")
+  return HtmlService.createTemplateFromFile("Index")
+    .evaluate()
     .setTitle("Kalkulator Laundry")
     .addMetaTag("viewport", "width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover")
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
-// ----------------------------------------------------------------------------
-// INCLUDE HELPER — WAJIB ADA, JANGAN DIHAPUS
-// ----------------------------------------------------------------------------
-// Dipanggil dari Index.html (dan dari Screen_*.html / Style_*.html lain bila
-// nanti saling memanggil) lewat sintaks template Apps Script:
-//
-//     <?!= include('Style_Tokens'); ?>
-//
-// Parameter filename HARUS persis sama (case-sensitive) dengan nama file
-// HTML di project ini, TANPA ekstensi ".html" (Apps Script menambahkannya
-// sendiri secara implisit untuk tipe file HTML).
-//
-// Tanpa fungsi ini, SEMUA pemanggilan include(...) di Index.html akan gagal
-// dieksekusi, dan kegagalan itu membuat seluruh proses templating Apps
-// Script berhenti di tengah jalan — efeknya browser menampilkan HTML mentah
-// tanpa CSS/JS sama sekali (persis seperti tampilan polos tanpa styling).
-//
-// Jika menambah file Style_*.html atau Screen_*.html baru di kemudian hari,
-// TIDAK perlu mengubah fungsi ini — cukup pastikan nama yang dipanggil di
-// include('NamaFile') cocok dengan nama file yang dibuat di editor.
+/**
+ * Helper untuk memanggil file HTML pecahan dari Index.html.
+ *
+ * Cara pakai di Index.html:
+ * <?!= include('Style_Tokens'); ?>
+ *
+ * Jangan pakai:
+ * <?!= include('Style_Tokens.html'); ?>
+ */
 function include(filename) {
-  return HtmlService.createHtmlOutputFromFile(filename).getContent();
+  const cleanName = String(filename || "").trim();
+
+  if (!cleanName) {
+    throw new Error("include(filename) gagal: nama file kosong.");
+  }
+
+  if (cleanName.indexOf("/") !== -1 || cleanName.indexOf("\\") !== -1) {
+    throw new Error("include(filename) gagal: nama file tidak boleh memakai path folder. File: " + cleanName);
+  }
+
+  if (/\.html$/i.test(cleanName)) {
+    throw new Error(
+      "include(filename) gagal: panggil tanpa ekstensi .html. Gunakan include('" +
+      cleanName.replace(/\.html$/i, "") +
+      "')."
+    );
+  }
+
+  try {
+    return HtmlService.createHtmlOutputFromFile(cleanName).getContent();
+  } catch (err) {
+    throw new Error(
+      "include('" + cleanName + "') gagal. Pastikan file " + cleanName +
+      ".html sudah ada di Apps Script. Detail: " +
+      (err && err.message ? err.message : String(err))
+    );
+  }
+}
+
+/**
+ * Tes cepat dari editor Apps Script.
+ * Jalankan fungsi ini, lalu lihat Execution log.
+ *
+ * Jika template benar, log TIDAK boleh menampilkan:
+ * <?!= include('Style_Tokens'); ?>
+ */
+function testDoGetTemplateOutput() {
+  const html = doGet().getContent();
+  Logger.log(html.slice(0, 500));
+
+  if (html.indexOf("<?!=") !== -1) {
+    throw new Error("Template belum diproses. Cek doGet(): wajib createTemplateFromFile('Index').evaluate().");
+  }
+
+  Logger.log("OK: Template sudah diproses. Include tidak tampil mentah.");
 }

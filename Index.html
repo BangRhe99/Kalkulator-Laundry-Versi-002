@@ -2,55 +2,30 @@
 ===============================================================================
 FILE: Index.html
 PROJECT: Kalkulator Laundry Versi 002
-TAHAP: 1 — Kerangka Include
+TAHAP: 2 — Pecah CSS Global
 
 FUNGSI FILE SAAT INI:
-File utama tampilan web app. Pada Tahap 1 ini file masih mempertahankan struktur
-Index monolitik agar fitur lama tetap aman, tetapi project sudah disiapkan untuk
-dipecah bertahap menggunakan fungsi include(filename) dari Code.gs.
+File utama web app yang sudah mulai memakai include untuk CSS global.
 
-ISI UTAMA SAAT INI:
-1. Struktur HTML utama aplikasi
-2. CSS global dan CSS per fitur yang masih berada di dalam <style>
-3. Screen utama aplikasi
-4. JavaScript frontend yang masih berada di dalam <script>
+PERUBAHAN TAHAP 2:
+1. Design token global dipindah ke Style_Tokens.html.
+2. CSS dasar aplikasi dipindah ke Style_Base.html.
+3. CSS komponen umum dipindah ke Style_Components.html.
+4. CSS khusus fitur masih tetap di Index.html untuk menjaga stabilitas.
 
-BATAS TANGGUNG JAWAB TAHAP 1:
-- Tahap ini belum memecah CSS, screen, atau JavaScript ke file terpisah.
-- Tahap ini hanya memastikan pondasi include sudah tersedia dan aman.
-- Jangan menambahkan include ke file yang belum dibuat.
-- Jangan menghapus blok lama sebelum file pecahan benar-benar tersedia dan dites.
+BATAS TANGGUNG JAWAB:
+- Tahap ini tidak menyentuh HTML screen.
+- Tahap ini tidak menyentuh JavaScript.
+- Tahap ini tidak mengubah logic fitur.
+- Tahap ini hanya memindahkan CSS global.
 
-POLA INCLUDE YANG AKAN DIPAKAI DI TAHAP BERIKUTNYA:
-<?!= include('Style_Tokens'); ?>
-<?!= include('Style_Base'); ?>
-<?!= include('Style_Components'); ?>
-
-<?!= include('Screen_Menu'); ?>
-<?!= include('Screen_Cabang'); ?>
-<?!= include('Screen_MasterBiaya'); ?>
-<?!= include('Screen_HPP'); ?>
-<?!= include('Screen_HargaLayanan'); ?>
-<?!= include('Screen_FixedCost'); ?>
-
-<?!= include('Script_Shared_Formatter'); ?>
-<?!= include('Script_Shared_Helper'); ?>
-<?!= include('Script_Shared_UI'); ?>
-
-<?!= include('Script_Core_State'); ?>
-<?!= include('Script_Core_Navigation'); ?>
-<?!= include('Script_Core_Init'); ?>
-
-<?!= include('Script_Module_Cabang'); ?>
-<?!= include('Script_Module_MasterBiaya'); ?>
-<?!= include('Script_Module_HPP'); ?>
-<?!= include('Script_Module_HargaLayanan'); ?>
-<?!= include('Script_Module_FixedCost'); ?>
+CATATAN PENTING:
+Jangan menulis syntax template Apps Script di dalam komentar HTML.
+Contoh syntax template: tanda tanya pembuka persen sama dengan include.
+Walaupun berada di komentar HTML, Apps Script tetap akan mengeksekusinya.
 
 CATATAN PENGEMBANGAN:
-Jika nanti file sudah dipecah, Index.html hanya boleh menjadi shell utama yang
-memanggil file lain. Logic fitur, style fitur, dan screen fitur harus berada di
-file sesuai tanggung jawabnya.
+Setelah tahap ini dites aman, tahap berikutnya adalah memecah CSS per fitur.
 ===============================================================================
 -->
 
@@ -2158,7 +2133,7 @@ logic, HTML screen, atau JavaScript.
    * ===========================================================================
    * Semua fungsi di bawah ini diberi prefix "gas"/"Gas" secara konsisten,
    * supaya kalau nanti dipecah ke file Index lain (mis. MasterBiaya.html
-   * yang di-include lewat <?!= include('MasterBiaya') ?>), batasnya jelas
+   * yang di-include lewat syntax include MasterBiaya), batasnya jelas
    * hanya dengan mencari prefix ini.
    * ===========================================================================
    */
