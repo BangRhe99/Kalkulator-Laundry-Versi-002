@@ -2731,19 +2731,19 @@ function selectGasCustom() {
     var container = document.getElementById("airInputContainer");
     container.innerHTML = "";
 
-    if (airFormState.sumberAir === "pdam") {
-      container.innerHTML = `
-        <div class="field">
-          <label for="airPdamHarga">Harga air per m³ (Rp)</label>
-          <input type="number" inputmode="decimal" min="0" step="0.01" id="airPdamHarga" placeholder="Contoh: 3000">
-          <div class="field-hint">Sesuaikan dengan tarif PDAM area laundry Anda.</div>
-        </div>
-        <div class="field">
-          <label for="airKebutuhanLiter">Kebutuhan air per load (liter)</label>
-          <input type="number" inputmode="decimal" min="0" step="0.1" id="airKebutuhanLiter" placeholder="Contoh: 200">
-          <div class="field-hint">Estimasi berdasarkan kapasitas mesin cuci utama Anda.</div>
-        </div>
-      `;
+if (airFormState.sumberAir === "pdam") {
+  container.innerHTML =
+    '<div class="field">' +
+      '<label for="airPdamHarga">Harga air per m³ (Rp)</label>' +
+      '<input type="number" inputmode="decimal" min="0" step="0.01" id="airPdamHarga" placeholder="Contoh: 3000">' +
+      '<div class="field-hint">Sesuaikan dengan tarif PDAM area laundry Anda.</div>' +
+    '</div>' +
+    '<div class="field">' +
+      '<label for="airKebutuhanLiter">Kebutuhan air per load (liter)</label>' +
+      '<input type="number" inputmode="decimal" min="0" step="0.1" id="airKebutuhanLiter" placeholder="Contoh: 200">' +
+      '<div class="field-hint">Estimasi berdasarkan kapasitas mesin cuci utama Anda.</div>' +
+    '</div>';
+
       document.getElementById("airPdamHarga").value = airFormState.hargaPerM3 || "";
       document.getElementById("airKebutuhanLiter").value = airFormState.kebutuhanAirPerLoad || "";
       document.getElementById("airPdamHarga").addEventListener("input", function (e) {
@@ -2756,19 +2756,17 @@ function selectGasCustom() {
       });
     } else if (airFormState.sumberAir === "tangki") {
       container.innerHTML = `
-        <div class="field">
-          <label for="airTangkiHarga">Harga per tangki (Rp)</label>
-          <input type="number" inputmode="decimal" min="0" step="0.01" id="airTangkiHarga" placeholder="Contoh: 50000">
-        </div>
-        <div class="field">
-          <label for="airTangkiKapasitas">Kapasitas tangki (liter)</label>
-          <input type="number" inputmode="decimal" min="0" step="1" id="airTangkiKapasitas" placeholder="Contoh: 1000">
-        </div>
-        <div class="field">
-          <label for="airKebutuhanLiter2">Kebutuhan air per load (liter)</label>
-          <input type="number" inputmode="decimal" min="0" step="0.1" id="airKebutuhanLiter2" placeholder="Contoh: 200">
-        </div>
-      `;
+       '<div class="field">' +
+      '<label for="airPdamHarga">Harga air per m³ (Rp)</label>' +
+      '<input type="number" inputmode="decimal" min="0" step="0.01" id="airPdamHarga" placeholder="Contoh: 3000">' +
+      '<div class="field-hint">Sesuaikan dengan tarif PDAM area laundry Anda.</div>' +
+    '</div>' +
+    '<div class="field">' +
+      '<label for="airKebutuhanLiter">Kebutuhan air per load (liter)</label>' +
+      '<input type="number" inputmode="decimal" min="0" step="0.1" id="airKebutuhanLiter" placeholder="Contoh: 200">' +
+      '<div class="field-hint">Estimasi berdasarkan kapasitas mesin cuci utama Anda.</div>' +
+    '</div>';
+    
       document.getElementById("airTangkiHarga").value = airFormState.hargaPerTangki || "";
       document.getElementById("airTangkiKapasitas").value = airFormState.kapasitasTangkiLiter || "";
       document.getElementById("airKebutuhanLiter2").value = airFormState.kebutuhanAirPerLoad || "";

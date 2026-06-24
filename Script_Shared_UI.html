@@ -1,11 +1,8 @@
-/**
- * =========================================================================
- * FILE: Script_Shared_UI.html
- * FUNGSI: Toast, status simpan, dan handler error umum.
- * BATAS: Tidak berisi logic HPP, Fixed Cost, Harga Layanan, atau rumus fitur.
- * =========================================================================
- */
-
+/*
+===============================================================================
+FILE: Script_Shared_UI.html
+===============================================================================
+*/
 function showToast(message, kind) {
   var el = document.getElementById("toast");
   if (!el) return;
@@ -19,7 +16,6 @@ function showToast(message, kind) {
   }, 3200);
 }
 
-// Alias nama pendek untuk pemanggilan UI umum bila dibutuhkan modul baru.
 function toast(message, kind) {
   showToast(message, kind);
 }
@@ -36,10 +32,6 @@ function clearSaveStatus() {
   setSaveStatus("", "");
 }
 
-/**
- * Satu pintu untuk menampilkan error backend ke user.
- * Stage tetap dicatat di console supaya debugging lebih cepat.
- */
 function handleBackendError(res, actionLabel) {
   var msg = (res && res.error) ? res.error : "Terjadi kesalahan tidak dikenal.";
   var stage = (res && res.stage) ? res.stage : "unknown_stage";
