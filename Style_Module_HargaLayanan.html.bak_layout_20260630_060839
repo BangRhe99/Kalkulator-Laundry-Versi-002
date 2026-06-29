@@ -1,8 +1,8 @@
-﻿<!--
+<!--
 ===============================================================================
 FILE: Style_Module_HargaLayanan.html
 PROJECT: Kalkulator Laundry Versi 002
-TAHAP: 3 â€” Pecah CSS Per Fitur
+TAHAP: 3 — Pecah CSS Per Fitur
 
 FUNGSI FILE:
 Style khusus untuk fitur Harga Layanan.
@@ -54,7 +54,7 @@ Jika tampilan input harga jual, margin, status margin, atau ringkasan Harga Laya
 .hl-status-pill.tipis { border-color: var(--brass-dim); color: var(--brass); background: rgba(217,162,75,0.08); }
 .hl-status-pill.rugi { border-color: var(--red-dim); color: var(--red); background: rgba(194,96,78,0.08); }
 .hl-status-pill.impas { border-color: var(--border); color: var(--text-faint); background: rgba(255,255,255,0.03); }
-.hl-metric-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; margin-bottom: 12px; }
+.hl-metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
 .hl-metric { background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.04); border-radius: var(--radius); padding: 11px 12px; }
 .hl-metric .label { font-size: 10.5px; color: var(--text-faint); margin-bottom: 5px; }
 .hl-metric .value { font-family: var(--font-display); font-size: 18px; font-weight: 800; color: var(--text); }

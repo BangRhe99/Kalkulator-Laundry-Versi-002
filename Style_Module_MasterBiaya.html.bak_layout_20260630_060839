@@ -1,8 +1,8 @@
-﻿<!--
+<!--
 ===============================================================================
 FILE: Style_Module_MasterBiaya.html
 PROJECT: Kalkulator Laundry Versi 002
-TAHAP: 3 â€” Pecah CSS Per Fitur
+TAHAP: 3 — Pecah CSS Per Fitur
 
 FUNGSI FILE:
 Style khusus untuk fitur Master Biaya.
@@ -34,7 +34,7 @@ Jika tampilan gas, listrik, air, atau admin/nota bermasalah, mulai cek dari file
 -->
 <style>
 /* ---------------------------------------------------------------------- */
-  /* MASTER BIAYA â€” pilih cabang (sub-langkah sebelum daftar kartu gas)     */
+  /* MASTER BIAYA — pilih cabang (sub-langkah sebelum daftar kartu gas)     */
   /* ---------------------------------------------------------------------- */
   .pick-cabang-row {
     background: var(--panel);
@@ -82,7 +82,7 @@ Jika tampilan gas, listrik, air, atau admin/nota bermasalah, mulai cek dari file
     padding-top: 14px;
     border-top: 1px solid var(--border);
   }
-  .gas-result-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; margin-bottom: 8px; }
+  .gas-result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
   .gas-result-cell {
     background: var(--panel-2);
     border-radius: var(--radius);
@@ -106,7 +106,7 @@ Jika tampilan gas, listrik, air, atau admin/nota bermasalah, mulai cek dari file
   }
 
   /* ---------------------------------------------------------------------- */
-  /* MASTER BIAYA â€” LISTRIK                                                 */
+  /* MASTER BIAYA — LISTRIK                                                 */
   /* ---------------------------------------------------------------------- */
   .tdl-panel {
     background: var(--panel);
@@ -138,7 +138,7 @@ Jika tampilan gas, listrik, air, atau admin/nota bermasalah, mulai cek dari file
 
   .listrik-kategori-grid {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-columns: 1fr 1fr;
     gap: 12px;
     margin-bottom: 12px;
   }
@@ -211,11 +211,18 @@ Jika tampilan gas, listrik, air, atau admin/nota bermasalah, mulai cek dari file
   }
 
   @media (min-width: 760px) {
-    #screenGasList .gas-grid {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-      gap: 14px;
-    }
+    body { padding: 28px 32px 90px; }
+    .wrap { max-width: 1080px; }
+    .layout-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-items: start; }
+    .layout-grid .col-input { display: flex; flex-direction: column; }
+    .layout-grid .col-output { position: sticky; top: 24px; }
+    .machine-grid { grid-template-columns: repeat(4, 1fr); }
+    .stat-grid { grid-template-columns: repeat(2, 1fr); }
+    .footer-bar { justify-content: flex-end; padding: 16px 32px; }
+    .footer-bar .wrap-inner { max-width: 320px; }
+    #screenList .list-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    #screenRingkasan .ringkasan-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+    #screenGasList .gas-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
   }
 
   .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }

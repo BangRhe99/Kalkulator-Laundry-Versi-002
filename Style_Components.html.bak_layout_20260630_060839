@@ -1,8 +1,8 @@
-﻿<!--
+<!--
 ===============================================================================
 FILE: Style_Components.html
 PROJECT: Kalkulator Laundry Versi 002
-TAHAP: 2 â€” Pecah CSS Global
+TAHAP: 2 — Pecah CSS Global
 
 FUNGSI FILE:
 File ini berisi style komponen umum yang dipakai lintas fitur.
@@ -103,7 +103,7 @@ Jika membuat fitur baru, pakai class komponen umum dari file ini terlebih dahulu
 
   .cabang-card-stats {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-columns: 1fr 1fr;
     gap: 10px;
   }
   .mini-stat .label { font-size: 11px; color: var(--text-faint); margin-bottom: 3px; }
@@ -213,7 +213,7 @@ Jika membuat fitur baru, pakai class komponen umum dari file ini terlebih dahulu
   .time-picker-row select { text-align: center; }
   .time-picker-row .colon { font-family: var(--font-mono); color: var(--text-faint); font-size: 16px; }
 
-  .row2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
   .duration-readout {
     margin-top: 10px;
@@ -256,7 +256,7 @@ Jika membuat fitur baru, pakai class komponen umum dari file ini terlebih dahulu
   }
   .icon-btn:hover { border-color: var(--red); color: var(--red); }
 
-  .machine-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
+  .machine-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .machine-grid .field { margin-bottom: 0; }
   .machine-grid label { font-size: 11px; margin-bottom: 4px; }
 
@@ -303,8 +303,7 @@ Jika membuat fitur baru, pakai class komponen umum dari file ini terlebih dahulu
     color: var(--text-dim);
     cursor: pointer;
     transition: all 0.15s ease;
-    min-width: 0;
-    overflow-wrap: anywhere;
+    min-width: fit-content;
   }
   .pill.active { border-color: var(--sage); color: var(--sage); background: rgba(111, 160, 140, 0.08); }
   .pill.active.flame { border-color: var(--flame); color: var(--flame); background: rgba(217, 113, 75, 0.08); }
@@ -408,7 +407,7 @@ Jika membuat fitur baru, pakai class komponen umum dari file ini terlebih dahulu
     margin-bottom: 14px;
   }
 
-  .stat-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; margin-bottom: 4px; }
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 4px; }
   .stat-card { background: var(--panel-2); border-radius: var(--radius); padding: 12px 14px; }
   .stat-card .label { font-size: 11px; color: var(--text-faint); margin-bottom: 6px; }
   .stat-card .num { font-family: var(--font-display); font-size: 22px; font-weight: 700; color: var(--text); line-height: 1.1; }
@@ -503,28 +502,11 @@ Jika membuat fitur baru, pakai class komponen umum dari file ini terlebih dahulu
     bottom: 0;
     left: 0;
     right: 0;
-    width: 100%;
-    max-width: 100%;
     background: linear-gradient(180deg, transparent, var(--bg) 30%);
     padding: 16px;
     padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
     display: flex;
     justify-content: center;
-    box-sizing: border-box;
-    z-index: 50;
   }
-  .footer-bar .wrap-inner {
-    max-width: 448px;
-    width: 100%;
-    min-width: 0;
-    display: flex;
-    gap: 10px;
-  }
-
-  @media (min-width: 760px) {
-    .machine-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-    .stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .footer-bar { justify-content: flex-end; padding: 16px 32px; }
-    .footer-bar .wrap-inner { max-width: 320px; }
-  }
+  .footer-bar .wrap-inner { max-width: 448px; width: 100%; display: flex; gap: 10px; }
 </style>

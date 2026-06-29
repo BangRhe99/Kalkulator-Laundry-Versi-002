@@ -1,8 +1,8 @@
-﻿<!--
+<!--
 ===============================================================================
 FILE: Style_Module_HPP.html
 PROJECT: Kalkulator Laundry Versi 002
-TAHAP: 3 â€” Pecah CSS Per Fitur
+TAHAP: 3 — Pecah CSS Per Fitur
 
 FUNGSI FILE:
 Style khusus untuk fitur Struktur Biaya HPP.
@@ -145,15 +145,13 @@ Jika tampilan rincian HPP, persen komponen, atau total HPP bermasalah, cek file 
 
 .hpp-component-line {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-columns: 1fr auto auto;
   gap: 10px;
   align-items: baseline;
   margin-bottom: 7px;
 }
 
 .hpp-component-name {
-  min-width: 0;
-  overflow-wrap: anywhere;
   font-size: 12.5px;
   color: var(--text-dim);
   min-width: 0;
