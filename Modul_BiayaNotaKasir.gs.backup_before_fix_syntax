@@ -1,6 +1,6 @@
 /**
  * ====================================================================
- * MODUL: MASTER BIAYA â€” NOTA & KASIR
+ * MODUL: MASTER BIAYA — NOTA & KASIR
  * ====================================================================
  * Fitur ini mengelola satu konfigurasi biaya nota/kasir per cabang.
  * Disimpan di sheet terpisah "BiayaNotaKasir" dengan satu baris per cabang.
@@ -16,7 +16,7 @@
  */
 
 // ============================================================================
-// SECTION: SKEMA / DEFAULT â€” MASTER BIAYA (NOTA & KASIR)
+// SECTION: SKEMA / DEFAULT — MASTER BIAYA (NOTA & KASIR)
 // ============================================================================
 
 function defaultBiayaNotaKasirRecord_(cabangId) {
@@ -169,7 +169,7 @@ function getCabangInfo_(cabangId) {
 }
 
 // ============================================================================
-// SECTION: PUBLIC FUNCTIONS â€” getBiayaNotaKasir / saveBiayaNotaKasir
+// SECTION: PUBLIC FUNCTIONS — getBiayaNotaKasir / saveBiayaNotaKasir
 // ============================================================================
 
 function getBiayaNotaKasir(cabangId) {
@@ -258,30 +258,7 @@ function saveBiayaNotaKasir(cabangId, payload) {
   } catch (err) {
     return notaKasirErrorResponse_(err, "saveBiayaNotaKasir");
   }
-}
-
-function normalizeBiayaNotaKasirRecord_(input, cabangId) {
-  const base = defaultBiayaNotaKasirRecord_(cabangId);
-  const out = defaultBiayaNotaKasirRecord_(cabangId);
-
-  out.id = toSafeString_(input && input.id, base.id, 80);
-  out.cabangId = cabangId;
-
-  out.sistemNotaKasir = toSafeString_(input && input.sistemNotaKasir, base.sistemNotaKasir, 40);
-  if (!["aplikasi_kasir_thermal", "nota_manual_ncr"].includes(out.sistemNotaKasir)) {
-    out.sistemNotaKasir = base.sistemNotaKasir;
-  }
-
-  out.metodeBiayaAplikasi = toSafeString_(input && input.metodeBiayaAplikasi, base.metodeBiayaAplikasi, 40);
-  if (!["biaya_langsung_per_transaksi", "biaya_bulanan_dibagi_transaksi", "gratis_tanpa_biaya_admin"].includes(out.metodeBiayaAplikasi)) {
-    out.metodeBiayaAplikasi = base.metodeBiayaAplikasi;
-  }
-
-  if (out.sistemNotaKasir === "nota_manual_ncr") {
-    out.metodeBiayaAplikasi = "gratis_tanpa_biaya_admin";
-  }
-
-  out.biayaPerTransaksi = clamp_(toNumber_(input && input.biayaPerTransaksi, base.biayaPerTransaksi), 0, 100000000);
+}se.biayaPerTransaksi), 0, 100000000);
   out.biayaBulananAplikasi = clamp_(toNumber_(input && input.biayaBulananAplikasi, base.biayaBulananAplikasi), 0, 100000000);
   out.estimasiTransaksiPerBulan = clamp_(toNumber_(input && input.estimasiTransaksiPerBulan, base.estimasiTransaksiPerBulan), 0, 100000000);
   out.hargaPerRoll = clamp_(toNumber_(input && input.hargaPerRoll, base.hargaPerRoll), 0, 100000000);
@@ -311,7 +288,7 @@ function validateBiayaNotaKasir_(data) {
 }
 
 // ============================================================================
-// SECTION: KALKULASI â€” BIAYA NOTA & KASIR
+// SECTION: KALKULASI — BIAYA NOTA & KASIR
 // ============================================================================
 
 function computeBiayaNotaKasirSummary_(record) {
