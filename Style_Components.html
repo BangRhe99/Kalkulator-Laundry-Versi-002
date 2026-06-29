@@ -667,5 +667,155 @@ Jika membuat fitur baru, pakai class komponen umum dari file ini terlebih dahulu
     justify-content: center;
   }
   .footer-bar .wrap-inner { max-width: 448px; width: 100%; display: flex; gap: 10px; }
+
+  /* === MOBILE_DASHBOARD_OVERFLOW_FIX_START ===
+     Root cause yang diperbaiki:
+     - Baris dashboard memakai flex dengan value kanan yang panjang.
+     - Pill/badge dan teks mono dapat memaksa parent melebar.
+     - Card harus min-width:0 agar child boleh mengecil di viewport HP.
+  */
+  .menu-grid,
+  .menu-card,
+  .menu-card .menu-body,
+  .dashboard-grid,
+  .dashboard-card,
+  .dashboard-card-summary,
+  .dashboard-kpi-row,
+  .dashboard-outlet-list,
+  .dashboard-outlet-row {
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .menu-card .menu-body {
+    overflow: hidden;
+  }
+
+  .menu-card .menu-title,
+  .menu-card .menu-desc,
+  .dashboard-empty,
+  .dashboard-more {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    word-break: normal;
+  }
+
+  .dashboard-card-summary {
+    width: 100%;
+  }
+
+  .dashboard-kpi {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .dashboard-outlet-row {
+    width: 100%;
+  }
+
+  .dashboard-outlet-name {
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .dashboard-outlet-value {
+    min-width: 0;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .dashboard-status-pill {
+    max-width: 100%;
+    white-space: nowrap;
+  }
+
+  @media (max-width: 520px) {
+    .menu-grid {
+      gap: 10px;
+    }
+
+    .menu-card {
+      padding: 14px;
+      gap: 10px;
+    }
+
+    .menu-card .menu-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 11px;
+      font-size: 18px;
+    }
+
+    .menu-card .menu-arrow {
+      margin-left: auto;
+    }
+
+    .dashboard-card-summary {
+      margin-top: 10px;
+      padding-top: 10px;
+    }
+
+    .dashboard-kpi-row {
+      gap: 7px;
+    }
+
+    .dashboard-kpi {
+      flex: 1 1 120px;
+    }
+
+    .dashboard-outlet-row {
+      flex-wrap: wrap;
+      align-items: flex-start;
+      gap: 5px 8px;
+    }
+
+    .dashboard-outlet-name {
+      flex: 1 1 120px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .dashboard-outlet-value {
+      flex: 1 1 100%;
+      text-align: left;
+      white-space: normal;
+      line-height: 1.45;
+    }
+
+    .dashboard-status-pill {
+      margin-left: 0;
+      margin-top: 4px;
+    }
+
+    .pill-group {
+      max-width: 100%;
+      min-width: 0;
+    }
+
+    .pill {
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .meta-row,
+    .scale-row,
+    .machine-summary-row {
+      min-width: 0;
+      gap: 8px;
+    }
+
+    .meta-row .meta-val,
+    .scale-row .v,
+    .machine-summary-row .detail {
+      min-width: 0;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+  }
+  /* === MOBILE_DASHBOARD_OVERFLOW_FIX_END === */
+
 </style>
 

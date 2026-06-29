@@ -119,4 +119,52 @@ Jika ada masalah layout dasar seperti body kepotong, header, tombol back, atau s
   }
 
   /* ---------------------------------------------------------------------- */
+
+  /* === MOBILE_LAYOUT_FIX_START ===
+     Tujuan:
+     1. Menghilangkan sumber scroll horizontal dari root layout.
+     2. Mengurangi ruang kosong bawah khusus Menu/Dashboard.
+     3. Menjaga screen lain yang memakai footer tetap aman.
+  */
+  html,
+  body {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: clip;
+  }
+
+  @supports not (overflow-x: clip) {
+    html,
+    body {
+      overflow-x: hidden;
+    }
+  }
+
+  body {
+    padding-left: clamp(12px, 4vw, 16px);
+    padding-right: clamp(12px, 4vw, 16px);
+  }
+
+  .wrap {
+    width: min(100%, 480px);
+    max-width: 100%;
+    min-width: 0;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  #loadingState,
+  #appRoot,
+  .screen {
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  @supports selector(body:has(#screenMenu.active)) {
+    body:has(#screenMenu.active) {
+      padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+    }
+  }
+  /* === MOBILE_LAYOUT_FIX_END === */
+
 </style>
