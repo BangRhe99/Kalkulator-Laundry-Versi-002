@@ -17,7 +17,6 @@
  * ============================================================================
  */
 
-
 /* ============================================================================
    KONSTANTA SKEMA GLOBAL
 ============================================================================ */
@@ -29,7 +28,6 @@ var KEY_META = "meta";
 var KEY_CABANG_ORDER = "cabang_order";
 var KEY_BIAYA_GAS_ORDER = "biayaGas_order";
 var KEY_LEGACY_V1 = "operasional_v1";
-
 
 /* ============================================================================
    ENTRY POINT WEB APP
@@ -52,7 +50,6 @@ function doGet(e) {
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
-
 /* ============================================================================
    HELPER INCLUDE HTML
 ============================================================================ */
@@ -61,13 +58,8 @@ function doGet(e) {
  * Helper untuk memanggil file HTML pecahan dari Index.html.
  *
  * Contoh pemakaian di Index.html:
- * include nama file tanpa ekstensi .html
- *
- * Benar:
- * include('Style_Tokens')
- *
- * Salah:
- * include('Style_Tokens.html')
+ * - Benar: include('Style_Tokens')
+ * - Salah: include('Style_Tokens.html')
  */
 function include(filename) {
   var cleanName = String(filename || "").trim();
@@ -105,7 +97,6 @@ function include(filename) {
   }
 }
 
-
 /* ============================================================================
    TEST TEMPLATE OUTPUT
 ============================================================================ */
@@ -117,9 +108,6 @@ function include(filename) {
  * 1. Pilih function testDoGetTemplateOutput.
  * 2. Klik Run.
  * 3. Buka Execution log.
- *
- * Jika berhasil, log akan menampilkan:
- * OK: Template sudah diproses.
  */
 function testDoGetTemplateOutput() {
   var html = doGet({}).getContent();

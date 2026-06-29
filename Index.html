@@ -696,12 +696,94 @@ Setelah tahap ini dites aman, tahap berikutnya adalah memecah CSS per fitur.
 
 <script>
 (function () {
-  "use strict";
+  function escapeDiagnosticHtml_(value) {
+    return String(value == null ? "" : value)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
 
-  <?!= include('Script_Shared_Formatter') ?>
-  <?!= include('Script_Shared_Helper') ?>
-  <?!= include('Script_Shared_UI') ?>
-  <?!= include('Script_Shared_Validator') ?>
+  window.__showBootDiagnosticError = function (title, detail) {
+    var message = title + "\n\n" + detail;
+
+    try {
+      alert(message);
+    } catch (alertErr) {
+      // Kalau alert diblokir sandbox/browser, lanjut tampilkan ke HTML.
+    }
+
+    try {
+      var loadingEl = document.getElementById("loadingState");
+      var appRootEl = document.getElementById("appRoot");
+
+      if (loadingEl) {
+        loadingEl.style.display = "none";
+      }
+
+      if (!appRootEl) {
+        appRootEl = document.createElement("div");
+        appRootEl.id = "appRoot";
+        document.body.appendChild(appRootEl);
+      }
+
+      appRootEl.style.display = "block";
+      appRootEl.innerHTML =
+        '<div style="margin:16px; padding:16px; border:2px solid #dc2626; border-radius:12px; background:#fff5f5; color:#111827; font-family:Arial,sans-serif;">' +
+          '<h2 style="margin:0 0 10px; color:#dc2626;">' + escapeDiagnosticHtml_(title) + '</h2>' +
+          '<p style="margin:0 0 10px; line-height:1.6;">Ini adalah error asli dari JavaScript di dalam iframe aplikasi.</p>' +
+          '<pre style="white-space:pre-wrap; overflow:auto; background:#111827; color:#fff; padding:12px; border-radius:10px; font-size:13px; line-height:1.5;">' +
+            escapeDiagnosticHtml_(detail) +
+          '</pre>' +
+        '</div>';
+    } catch (domErr) {
+      // Kalau DOM juga gagal, minimal alert sudah dicoba.
+    }
+  };
+
+  window.onerror = function (msg, src, line, col, err) {
+    var detail =
+      "Message: " + msg +
+      "\nSource: " + (src || "-") +
+      "\nLine: " + (line || "-") +
+      "\nColumn: " + (col || "-") +
+      "\nStack:\n" + (err && err.stack ? err.stack : "-");
+
+    window.__showBootDiagnosticError("GLOBAL ERROR", detail);
+
+    return false;
+  };
+
+  window.addEventListener("unhandledrejection", function (event) {
+    var reason = event && event.reason ? event.reason : event;
+    var detail =
+      "Unhandled Promise Rejection" +
+      "\nMessage: " + (reason && reason.message ? reason.message : String(reason)) +
+      "\nStack:\n" + (reason && reason.stack ? reason.stack : "-");
+
+    window.__showBootDiagnosticError("PROMISE ERROR", detail);
+  });
+})();
+</script>
+
+<!-- 
+  =============================================================================
+  PERBAIKAN TAHAP 5:
+  Semua file Script_Shared di-include DI LUAR tag <script> logika utama.
+  Ini karena file-file tersebut mengandung tag <script>...</script> bawaan.
+  Jika ditaruh di dalam tag <script> yang sudah terbuka, HTML Parser akan
+  menganggap tag </script> pertama sebagai penutup seluruh logika aplikasi.
+  =============================================================================
+-->
+<?!= include('Script_Shared_Helper') ?>
+<?!= include('Script_Shared_Formatter') ?>
+<?!= include('Script_Shared_UI') ?>
+<?!= include('Script_Shared_Validator') ?>
+
+<script>
+(function () {
+  "use strict";
 
   /**
    * =========================================================================
@@ -723,7 +805,7 @@ Setelah tahap ini dites aman, tahap berikutnya adalah memecah CSS per fitur.
     listrikCabangId: null,
     airCabangId: null,
     notaKasirCabangId: null,
-    biayaTetapCabangId: null,
+    biayaTetapCabangId: null
   };
   var cabangListCache = [];
   var formState = null;
@@ -2133,7 +2215,7 @@ function selectGasCustom() {
    * ===========================================================================
    */
 
-  var JENIS_MESIN_LABEL_CLIENT = { rumah_tangga: "Rumah tangga", konversi: "Konversi", komersial: "Komersial" };
+  var JENIS_MESIN_LABEL_CLIENT = { rumah_tangga: "Konversi", konversi: "Konversi", komersial: "Komersial" };
 
   function listrikMachineLabel(m, index) {
     var jenis = JENIS_MESIN_LABEL_CLIENT[m.jenis] || "Mesin";
@@ -4010,17 +4092,59 @@ window.saveAirForm = saveAirForm;
     saveHargaLayananFromInputs();
   }
 
-  document.addEventListener("DOMContentLoaded", function () {
-    initTimeSelects();
-    bindStaticFormInputs();
-    bindGasFormInputs();
-    bindListrikFormInputs();
+  function bootApp() {
+    alert("BOOT DIPANGGIL. loadingState: " + (document.getElementById("loadingState") ? "DITEMUKAN" : "NULL") + " | appRoot: " + (document.getElementById("appRoot") ? "DITEMUKAN" : "NULL"));
 
-    document.getElementById("loadingState").style.display = "none";
-    document.getElementById("appRoot").style.display = "block";
+    var loadingEl = document.getElementById("loadingState");
+    var appRootEl = document.getElementById("appRoot");
 
-    showScreen("menu");
-  });
+    try {
+      initTimeSelects();
+      bindStaticFormInputs();
+      bindGasFormInputs();
+      bindListrikFormInputs();
+
+      if (loadingEl) loadingEl.style.display = "none";
+      if (appRootEl) appRootEl.style.display = "block";
+
+      showScreen("menu");
+    } catch (err) {
+      var detail =
+        "Message: " + (err && err.message ? err.message : String(err)) +
+        "\nStack:\n" + (err && err.stack ? err.stack : "-");
+
+      try {
+        alert("BOOT ERROR\n\n" + detail);
+      } catch (alertErr) {
+        // Kalau alert diblokir, fallback HTML di bawah tetap jalan.
+      }
+
+      if (loadingEl) loadingEl.style.display = "none";
+
+      if (window.__showBootDiagnosticError) {
+        window.__showBootDiagnosticError("BOOT ERROR", detail);
+      } else if (appRootEl) {
+        appRootEl.style.display = "block";
+        appRootEl.innerHTML =
+          '<div class="panel" style="border:1px solid #ef4444; padding:16px; margin-top:16px;">' +
+            '<h2 style="margin:0 0 8px; color:#ef4444;">BOOT ERROR</h2>' +
+            '<pre style="white-space:pre-wrap; background:#111827; color:#fff; padding:12px; border-radius:10px; overflow:auto;">' +
+              String(detail).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") +
+            '</pre>' +
+          '</div>';
+      } else {
+        throw err;
+      }
+    }
+  }
+
+  alert("readyState: " + document.readyState);
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", bootApp);
+  } else {
+    bootApp();
+  }
 })();
 </script>
 
