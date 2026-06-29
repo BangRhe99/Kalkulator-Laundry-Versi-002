@@ -1,0 +1,294 @@
+﻿==============================
+INDEX.HTML — META VIEWPORT
+==============================
+
+  Index.html:37:<!-- Penambahan meta tag agar responsif & full-screen di Home Screen HP -->
+> Index.html:38:<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scal
+able=no">
+  Index.html:39:<meta name="mobile-web-app-capable" content="yes">
+  Index.html:40:<meta name="apple-mobile-web-app-capable" content="yes">
+> Index.html:41:<meta name="theme-color" content="#0B0E12">
+  Index.html:42:<title>Kalkulator Laundry</title>
+
+
+
+==============================
+STYLE_BASE — html/body/wrap/screen
+==============================
+
+  Style_Base.html:1:<!--
+  Style_Base.html:2:===============================================================================
+> Style_Base.html:3:FILE: Style_Base.html
+  Style_Base.html:4:PROJECT: Kalkulator Laundry Versi 002
+  Style_Base.html:5:TAHAP: 2 — Pecah CSS Global
+  Style_Base.html:9:
+  Style_Base.html:10:ISI UTAMA:
+> Style_Base.html:11:1. Reset global\n2. Style html dan body\n3. Wrapper utama\n4. Header aplikasi\n5. Tombol 
+back\n6. Brand\n7. Save status\n8. Screen active/hidden\n9. Header daftar
+  Style_Base.html:12:
+  Style_Base.html:13:BATAS TANGGUNG JAWAB:
+> Style_Base.html:14:- Hanya berisi style pondasi global.\n- Tidak boleh berisi style card fitur khusus.\n- Ti
+dak boleh berisi style Master Biaya, HPP, Fixed Cost, atau Harga Layanan.\n- Tidak boleh berisi JavaScript ata
+u HTML screen.
+  Style_Base.html:15:
+  Style_Base.html:16:TERHUBUNG DENGAN:
+> Style_Base.html:17:- Index.html\n- Layout_AppShell.html yang akan dibuat pada tahap berikutnya\n- Screen_*.h
+tml yang akan dibuat pada tahap berikutnya
+  Style_Base.html:18:
+  Style_Base.html:19:CATATAN PENGEMBANGAN:
+  Style_Base.html:24:* { box-sizing: border-box; margin: 0; padding: 0; }
+  Style_Base.html:25:
+> Style_Base.html:26:  html {
+  Style_Base.html:27:    background: var(--bg);
+> Style_Base.html:28:    min-height: 100%;
+  Style_Base.html:29:    height: 100%;
+  Style_Base.html:30:  }
+  Style_Base.html:31:
+> Style_Base.html:32:  html, body {
+  Style_Base.html:33:    background: var(--bg);
+  Style_Base.html:34:    color: var(--text);
+  Style_Base.html:36:    -webkit-font-smoothing: antialiased;
+  Style_Base.html:37:    /* PERBAIKAN: Mencegah layar terpotong atau bisa digeser ke samping */
+> Style_Base.html:38:    max-width: 100%;
+> Style_Base.html:39:    overflow-x: hidden; 
+> Style_Base.html:40:    min-height: 100vh;
+  Style_Base.html:41:  }
+  Style_Base.html:42:
+> Style_Base.html:43:  body {
+  Style_Base.html:44:    padding: 16px;
+> Style_Base.html:45:    padding-bottom: calc(90px + env(safe-area-inset-bottom, 0px));
+> Style_Base.html:46:    min-height: 100%;
+  Style_Base.html:47:  }
+  Style_Base.html:48:
+> Style_Base.html:49:  .wrap { max-width: 480px; margin: 0 auto; }
+  Style_Base.html:50:
+  Style_Base.html:51:  header.app-header {
+  Style_Base.html:92:    color: var(--text-faint);
+  Style_Base.html:93:    text-align: right;
+> Style_Base.html:94:    min-height: 14px;
+  Style_Base.html:95:    flex-shrink: 0;
+  Style_Base.html:96:  }
+  Style_Base.html:99:  .save-status.busy { color: var(--brass); }
+  Style_Base.html:100:
+> Style_Base.html:101:  .screen { display: none; }
+> Style_Base.html:102:  .screen.active { display: block; }
+  Style_Base.html:103:
+  Style_Base.html:104:  .list-header {
+
+
+
+==============================
+STYLE_COMPONENTS — MENU CARD
+==============================
+
+  Style_Components.html:25:  /* ---------------------------------------------------------------------- */
+> Style_Components.html:26:  .menu-grid { display: flex; flex-direction: column; gap: 12px; }
+> Style_Components.html:27:  .menu-card {
+  Style_Components.html:28:    background: var(--panel);
+  Style_Components.html:29:    border: 1px solid var(--border);
+  Style_Components.html:30:    border-radius: var(--radius-lg);
+  Style_Components.html:31:    padding: 18px;
+  Style_Components.html:38:  }
+> Style_Components.html:39:  .menu-card:hover { border-color: var(--sage-dim); }
+> Style_Components.html:40:  .menu-card .menu-icon {
+  Style_Components.html:41:    width: 44px;
+  Style_Components.html:42:    height: 44px;
+  Style_Components.html:43:    border-radius: 12px;
+  Style_Components.html:44:    display: flex;
+  Style_Components.html:49:  }
+> Style_Components.html:50:  .menu-card.tone-sage .menu-icon { background: rgba(111,160,140,0.12); color: var(
+--sage); }
+> Style_Components.html:51:  .menu-card.tone-flame .menu-icon { background: rgba(217,113,75,0.12); color: var(
+--flame); }
+> Style_Components.html:52:  .menu-card.tone-volt .menu-icon { background: rgba(217,194,75,0.12); color: var(-
+-volt); }
+> Style_Components.html:53:  .menu-card .menu-body { flex: 1; min-width: 0; }
+> Style_Components.html:54:  .menu-card .menu-title {
+  Style_Components.html:55:    font-family: var(--font-display);
+  Style_Components.html:56:    font-size: 15.5px;
+  Style_Components.html:57:    font-weight: 600;
+  Style_Components.html:58:    margin-bottom: 3px;
+  Style_Components.html:59:  }
+> Style_Components.html:60:  .menu-card .menu-desc { font-size: 12.5px; color: var(--text-faint); line-height:
+ 1.4; }
+> Style_Components.html:61:  .menu-card .menu-arrow { color: var(--text-faint); font-size: 16px; flex-shrink: 
+0; }
+  Style_Components.html:62:
+  Style_Components.html:63:  .dashboard-header {
+  Style_Components.html:64:    margin-bottom: 16px;
+  Style_Components.html:65:  }
+
+
+
+==============================
+STYLE_COMPONENTS — DASHBOARD CARD
+==============================
+
+  Style_Components.html:62:
+> Style_Components.html:63:  .dashboard-header {
+  Style_Components.html:64:    margin-bottom: 16px;
+  Style_Components.html:65:  }
+  Style_Components.html:66:
+  Style_Components.html:67:  .dashboard-eyebrow {
+  Style_Components.html:93:
+> Style_Components.html:94:  .dashboard-card-summary {
+  Style_Components.html:95:    margin-top: 12px;
+  Style_Components.html:96:    padding-top: 10px;
+  Style_Components.html:97:    border-top: 1px solid var(--border);
+  Style_Components.html:98:    color: var(--text-dim);
+  Style_Components.html:102:
+> Style_Components.html:103:  .dashboard-card-summary.is-loading {
+  Style_Components.html:104:    color: var(--text-faint);
+  Style_Components.html:105:  }
+  Style_Components.html:106:
+> Style_Components.html:107:  .dashboard-kpi-row {
+  Style_Components.html:108:    display: flex;
+  Style_Components.html:109:    gap: 8px;
+  Style_Components.html:110:    flex-wrap: wrap;
+  Style_Components.html:111:    margin-bottom: 9px;
+  Style_Components.html:113:
+> Style_Components.html:114:  .dashboard-kpi {
+  Style_Components.html:115:    background: var(--panel-2);
+  Style_Components.html:116:    border: 1px solid var(--border);
+  Style_Components.html:117:    border-radius: 9px;
+  Style_Components.html:118:    padding: 7px 9px;
+  Style_Components.html:121:
+> Style_Components.html:122:  .dashboard-kpi strong {
+  Style_Components.html:123:    display: block;
+  Style_Components.html:124:    font-family: var(--font-display);
+  Style_Components.html:125:    font-size: 14px;
+  Style_Components.html:126:    color: var(--text);
+  Style_Components.html:129:
+> Style_Components.html:130:  .dashboard-kpi span {
+  Style_Components.html:131:    display: block;
+  Style_Components.html:132:    margin-top: 3px;
+  Style_Components.html:133:    font-size: 10.5px;
+  Style_Components.html:134:    color: var(--text-faint);
+  Style_Components.html:142:
+> Style_Components.html:143:  .dashboard-outlet-row {
+  Style_Components.html:144:    display: flex;
+  Style_Components.html:145:    justify-content: space-between;
+  Style_Components.html:146:    gap: 8px;
+  Style_Components.html:147:    align-items: center;
+  Style_Components.html:153:
+> Style_Components.html:154:  .dashboard-outlet-name {
+  Style_Components.html:155:    color: var(--text);
+  Style_Components.html:156:    font-weight: 600;
+  Style_Components.html:157:    min-width: 0;
+  Style_Components.html:158:    overflow: hidden;
+  Style_Components.html:162:
+> Style_Components.html:163:  .dashboard-outlet-value {
+  Style_Components.html:164:    color: var(--text-dim);
+  Style_Components.html:165:    font-family: var(--font-mono);
+  Style_Components.html:166:    font-size: 10.5px;
+  Style_Components.html:167:    text-align: right;
+  Style_Components.html:170:
+> Style_Components.html:171:  .dashboard-status-pill {
+  Style_Components.html:172:    display: inline-flex;
+  Style_Components.html:173:    align-items: center;
+  Style_Components.html:174:    justify-content: center;
+  Style_Components.html:175:    border-radius: 999px;
+  Style_Components.html:184:
+> Style_Components.html:185:  .dashboard-status-pill.ok {
+  Style_Components.html:186:    border-color: var(--sage-dim);
+  Style_Components.html:187:    color: var(--sage);
+  Style_Components.html:188:  }
+  Style_Components.html:189:
+> Style_Components.html:190:  .dashboard-status-pill.warning {
+  Style_Components.html:191:    border-color: var(--brass-dim);
+  Style_Components.html:192:    color: var(--brass);
+  Style_Components.html:193:  }
+  Style_Components.html:194:
+> Style_Components.html:195:  .dashboard-status-pill.danger {
+  Style_Components.html:196:    border-color: var(--red-dim);
+  Style_Components.html:197:    color: var(--red);
+  Style_Components.html:198:  }
+  Style_Components.html:199:
+> Style_Components.html:200:  .dashboard-outlet-row.is-warning {
+  Style_Components.html:201:    border-color: var(--brass-dim);
+  Style_Components.html:202:  }
+  Style_Components.html:203:
+> Style_Components.html:204:  .dashboard-outlet-row.is-danger {
+  Style_Components.html:205:    border-color: var(--red-dim);
+  Style_Components.html:206:  }
+  Style_Components.html:207:
+  Style_Components.html:208:  .dashboard-empty,
+> Style_Components.html:209:  .dashboard-more {
+  Style_Components.html:210:    color: var(--text-faint);
+  Style_Components.html:211:    font-size: 12px;
+  Style_Components.html:212:    line-height: 1.45;
+  Style_Components.html:213:  }
+  Style_Components.html:214:
+> Style_Components.html:215:  .dashboard-more {
+  Style_Components.html:216:    margin-top: 7px;
+  Style_Components.html:217:    font-family: var(--font-mono);
+  Style_Components.html:218:  }
+  Style_Components.html:219:
+
+
+
+==============================
+STYLE_COMPONENTS — PILL / ROW YANG RAWAN OVERFLOW
+==============================
+
+  Style_Components.html:252:  }
+> Style_Components.html:253:  .meta-row {
+  Style_Components.html:254:    display: flex;
+  Style_Components.html:255:    justify-content: space-between;
+  Style_Components.html:256:    align-items: baseline;
+  Style_Components.html:257:    font-size: 12.5px;
+  Style_Components.html:258:  }
+> Style_Components.html:259:  .meta-row .meta-label { color: var(--text-faint); }
+> Style_Components.html:260:  .meta-row .meta-val { color: var(--text-dim); font-weight: 500; text-align: righ
+t; }
+  Style_Components.html:261:
+  Style_Components.html:262:  .cabang-card-stats {
+  Style_Components.html:263:    display: grid;
+  Style_Components.html:264:    grid-template-columns: 1fr 1fr;
+  Style_Components.html:449:  /* PERBAIKAN: flex-wrap untuk menghindari kepotong jika layar sempit */
+> Style_Components.html:450:  .pill-group { display: flex; gap: 8px; flex-wrap: wrap; }
+  Style_Components.html:451:
+> Style_Components.html:452:  .pill {
+  Style_Components.html:453:    flex: 1;
+  Style_Components.html:454:    text-align: center;
+  Style_Components.html:455:    padding: 10px 8px;
+  Style_Components.html:456:    border-radius: var(--radius);
+  Style_Components.html:465:  }
+> Style_Components.html:466:  .pill.active { border-color: var(--sage); color: var(--sage); background: rgba(1
+11, 160, 140, 0.08); }
+> Style_Components.html:467:  .pill.active.flame { border-color: var(--flame); color: var(--flame); background
+: rgba(217, 113, 75, 0.08); }
+> Style_Components.html:468:  .pill.active.volt { border-color: var(--volt); color: var(--volt); background: r
+gba(217, 194, 75, 0.08); }
+> Style_Components.html:469:  .pill.disabled { opacity: 0.4; cursor: not-allowed; }
+  Style_Components.html:470:
+  Style_Components.html:471:  .group-divider {
+  Style_Components.html:472:    display: flex;
+  Style_Components.html:473:    align-items: center;
+  Style_Components.html:576:  .scale-table { margin-top: 14px; border-top: 1px solid var(--border); padding-to
+p: 14px; }
+> Style_Components.html:577:  .scale-row { display: flex; justify-content: space-between; align-items: baselin
+e; padding: 7px 0; font-size: 13px; }
+> Style_Components.html:578:  .scale-row .k { color: var(--text-dim); }
+> Style_Components.html:579:  .scale-row .v { font-family: var(--font-mono); font-weight: 600; color: var(--te
+xt); }
+> Style_Components.html:580:  .scale-row.highlight .v { color: var(--brass); font-size: 15px; }
+> Style_Components.html:581:  .scale-row.highlight.flame .v { color: var(--flame); }
+  Style_Components.html:582:
+  Style_Components.html:583:  .machine-summary-list { display: flex; flex-direction: column; gap: 8px; }
+> Style_Components.html:584:  .machine-summary-row {
+  Style_Components.html:585:    display: flex;
+  Style_Components.html:586:    justify-content: space-between;
+  Style_Components.html:587:    align-items: center;
+  Style_Components.html:588:    background: var(--panel-2);
+  Style_Components.html:592:  }
+> Style_Components.html:593:  .machine-summary-row .name { color: var(--text); font-weight: 500; }
+> Style_Components.html:594:  .machine-summary-row .detail { color: var(--text-faint); font-family: var(--font
+-mono); font-size: 11.5px; }
+  Style_Components.html:595:
+  Style_Components.html:596:  .btn-danger {
+  Style_Components.html:597:    background: transparent;
+  Style_Components.html:598:    border: 1px solid var(--red-dim);
+
+
+
