@@ -1,8 +1,8 @@
-<!--
+﻿<!--
 ===============================================================================
 FILE: Style_Module_FixedCost.html
 PROJECT: Kalkulator Laundry Versi 002
-TAHAP: 3 — Pecah CSS Per Fitur
+TAHAP: 3 â€” Pecah CSS Per Fitur
 
 FUNGSI FILE:
 Style khusus untuk fitur Biaya Tetap Outlet atau Fixed Cost.
@@ -43,7 +43,7 @@ Jika tampilan Fixed Cost atau ringkasan Fixed Cost di daftar outlet bermasalah, 
 .fc-section { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 18px; margin-bottom: 14px; }
 .fc-section-title { font-family: var(--font-display); font-size: 15px; font-weight: 700; margin-bottom: 12px; }
 .fc-section-note { font-size: 11.5px; color: var(--text-faint); line-height: 1.45; margin-top: -4px; margin-bottom: 12px; }
-.fc-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.fc-grid-2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
 .fc-result-chip { background: rgba(111,160,140,0.08); border: 1px solid var(--sage-dim); border-radius: var(--radius); padding: 11px 12px; }
 .fc-result-chip .label { font-size: 10.5px; color: var(--text-faint); margin-bottom: 5px; }
 .fc-result-chip .value { font-family: var(--font-display); font-size: 18px; font-weight: 800; color: var(--sage); }
@@ -52,14 +52,14 @@ Jika tampilan Fixed Cost atau ringkasan Fixed Cost di daftar outlet bermasalah, 
 .fc-row-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 10px; }
 .fc-row-title { font-family: var(--font-display); font-size: 13px; font-weight: 700; color: var(--text); }
 .fc-row-subtitle { font-size: 11px; color: var(--text-faint); margin-top: 3px; }
-.fc-input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.fc-input-grid.three { grid-template-columns: 1fr 1fr 1fr; }
+.fc-input-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
+.fc-input-grid.three { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr); }
 .fc-input-grid .field { margin-bottom: 0; }
 .fc-input-grid label { font-size: 10.5px; margin-bottom: 4px; }
 .fc-mini-total { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border); display: flex; justify-content: space-between; align-items: baseline; font-size: 12px; }
 .fc-mini-total .k { color: var(--text-faint); }
 .fc-mini-total .v { font-family: var(--font-mono); color: var(--brass); font-weight: 700; }
-.fc-summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.fc-summary-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
 .fc-summary-item { background: var(--panel-2); border-radius: var(--radius); padding: 11px 12px; }
 .fc-summary-item .label { font-size: 10.5px; color: var(--text-faint); margin-bottom: 5px; }
 .fc-summary-item .value { font-family: var(--font-display); font-size: 18px; font-weight: 800; color: var(--text); }
@@ -82,7 +82,7 @@ Jika tampilan Fixed Cost atau ringkasan Fixed Cost di daftar outlet bermasalah, 
 }
 .fc-list-summary-top {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 8px;
   margin-bottom: 8px;
 }

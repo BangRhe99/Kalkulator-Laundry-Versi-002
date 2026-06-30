@@ -1,8 +1,8 @@
-﻿<!--
+<!--
 ===============================================================================
 FILE: Index.html
 PROJECT: Kalkulator Laundry Versi 002
-TAHAP: 5 Ã¢â‚¬â€ Pecah Script Shared
+TAHAP: 5 â€” Pecah Script Shared
 
 FUNGSI FILE SAAT INI:
 File utama web app yang sudah memakai include CSS, screen, dan script shared.
@@ -35,7 +35,7 @@ Setelah tahap ini dites aman, tahap berikutnya adalah memecah CSS per fitur.
 <head>
 <meta charset="UTF-8">
 <!-- Penambahan meta tag agar responsif & full-screen di Home Screen HP -->
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0B0E12">
@@ -71,7 +71,7 @@ Setelah tahap ini dites aman, tahap berikutnya adalah memecah CSS per fitur.
   <div id="appRoot" style="display:none;">
 
     <!-- ===================================================================
-         LAYAR: MENU UTAMA Ã¢â‚¬â€ gerbang ke "Cabang & Lokasi" dan "Master Biaya"
+         LAYAR: MENU UTAMA â€” gerbang ke "Cabang & Lokasi" dan "Master Biaya"
     =================================================================== -->
     <section class="screen" id="screenMenu">
       <div class="list-header">
@@ -342,7 +342,7 @@ Setelah tahap ini dites aman, tahap berikutnya adalah memecah CSS per fitur.
     </section>
 
     <!-- ===================================================================
-         LAYAR: MASTER BIAYA Ã¢â‚¬â€ pilih kategori (saat ini hanya Gas aktif)
+         LAYAR: MASTER BIAYA â€” pilih kategori (saat ini hanya Gas aktif)
     =================================================================== -->
     <section class="screen" id="screenMasterBiaya">
       <div class="list-header">
@@ -567,7 +567,7 @@ Setelah tahap ini dites aman, tahap berikutnya adalah memecah CSS per fitur.
 
 
     <!-- ===================================================================
-         LAYAR: STRUKTUR BIAYA HPP Ã¢â‚¬â€ pilih outlet
+         LAYAR: STRUKTUR BIAYA HPP â€” pilih outlet
     =================================================================== -->
     <section class="screen" id="screenStrukturHPPList">
       <div class="list-header">
@@ -583,7 +583,7 @@ Setelah tahap ini dites aman, tahap berikutnya adalah memecah CSS per fitur.
     </section>
 
     <!-- ===================================================================
-         LAYAR: STRUKTUR BIAYA HPP Ã¢â‚¬â€ detail hasil
+         LAYAR: STRUKTUR BIAYA HPP â€” detail hasil
     =================================================================== -->
     <section class="screen" id="screenStrukturHPPDetail">
       <div class="hpp-structure-head">
@@ -600,7 +600,7 @@ Setelah tahap ini dites aman, tahap berikutnya adalah memecah CSS per fitur.
 
 
     <!-- ===================================================================
-         LAYAR: HARGA LAYANAN Ã¢â‚¬â€ pilih outlet
+         LAYAR: HARGA LAYANAN â€” pilih outlet
     =================================================================== -->
     <section class="screen" id="screenHargaLayananList">
       <div class="list-header">
@@ -616,7 +616,7 @@ Setelah tahap ini dites aman, tahap berikutnya adalah memecah CSS per fitur.
     </section>
 
     <!-- ===================================================================
-         LAYAR: HARGA LAYANAN Ã¢â‚¬â€ detail per outlet
+         LAYAR: HARGA LAYANAN â€” detail per outlet
     =================================================================== -->
     <section class="screen" id="screenHargaLayananDetail">
       <div class="hl-head">
@@ -644,7 +644,7 @@ Setelah tahap ini dites aman, tahap berikutnya adalah memecah CSS per fitur.
     </section>
 
     <!-- ===================================================================
-         LAYAR: BIAYA TETAP OUTLET Ã¢â‚¬â€ pilih outlet
+         LAYAR: BIAYA TETAP OUTLET â€” pilih outlet
     =================================================================== -->
     <section class="screen" id="screenBiayaTetapList">
       <div class="list-header">
@@ -660,7 +660,7 @@ Setelah tahap ini dites aman, tahap berikutnya adalah memecah CSS per fitur.
     </section>
 
     <!-- ===================================================================
-         LAYAR: BIAYA TETAP OUTLET Ã¢â‚¬â€ form & rangkuman
+         LAYAR: BIAYA TETAP OUTLET â€” form & rangkuman
     =================================================================== -->
     <section class="screen" id="screenBiayaTetapForm">
       <div class="fc-head">
@@ -783,7 +783,7 @@ Setelah tahap ini dites aman, tahap berikutnya adalah memecah CSS per fitur.
   
   /*
    * =========================================================================
-   * SHARED FUNCTIONS â€” digabung kembali ke Index.html
+   * SHARED FUNCTIONS — digabung kembali ke Index.html
    * Urutan: Helper -> Formatter -> UI -> Validator
    * =========================================================================
    */
@@ -978,7 +978,7 @@ Setelah tahap ini dites aman, tahap berikutnya adalah memecah CSS per fitur.
     screen: "menu",
     editingId: null,
     isNew: false,
-    kategoriBiayaAktif: "gas", // "gas" | "listrik" | "air" | "notaKasir" Ã¢â‚¬â€ menentukan tujuan saat pilih cabang di screenMasterBiaya
+    kategoriBiayaAktif: "gas", // "gas" | "listrik" | "air" | "notaKasir" â€” menentukan tujuan saat pilih cabang di screenMasterBiaya
     gasCabangId: null,
     gasEditingId: null,
     gasIsNew: false,
@@ -1063,7 +1063,7 @@ Setelah tahap ini dites aman, tahap berikutnya adalah memecah CSS per fitur.
   /**
    * Salinan rumus computeBiayaGasSummary_ dari Code.gs, untuk pratinjau
    * instan di form (tanpa menunggu roundtrip ke server). Backend tetap
-   * sumber kebenaran tunggal saat data disimpan Ã¢â‚¬â€ lihat catatan di Code.gs.
+   * sumber kebenaran tunggal saat data disimpan â€” lihat catatan di Code.gs.
    */
   function computeBiayaGasSummaryClient(record, dryer) {
     var durasiLoadMenit = dryer ? (Number(dryer.durasiMenit) || 0) : 0;
@@ -1097,7 +1097,7 @@ Setelah tahap ini dites aman, tahap berikutnya adalah memecah CSS per fitur.
 
   function machineDisplayName(m) {
     var jenis = JENIS_MESIN_LABEL[m.jenis] || "Mesin";
-    return jenis + " Ã‚Â· " + (m.durasiMenit || 0) + " mnt";
+    return jenis + " Â· " + (m.durasiMenit || 0) + " mnt";
   }
 
   var BIAYA_GAS_PRESET = [
@@ -1111,7 +1111,7 @@ Setelah tahap ini dites aman, tahap berikutnya adalah memecah CSS per fitur.
    * =========================================================================
    * NAVIGASI ANTAR LAYAR
    * -------------------------------------------------------------------------
-   * SCREEN_STACK mendefinisikan "induk" tiap layar untuk tombol Kembali (Ã¢â€ Â).
+   * SCREEN_STACK mendefinisikan "induk" tiap layar untuk tombol Kembali (â†).
    * Ditambah entri untuk layar Master Biaya tanpa mengubah entri yang sudah
    * ada (list/ringkasan/form tetap balik ke "list" atau parent masing-masing).
    * =========================================================================
@@ -1230,12 +1230,7 @@ Setelah tahap ini dites aman, tahap berikutnya adalah memecah CSS per fitur.
     var content = document.getElementById("footerContent");
     content.innerHTML = "";
 
-    
-    function setFooterVisible(visible) {
-      bar.style.display = visible ? "flex" : "none";
-      document.body.classList.toggle("has-fixed-footer", visible);
-    }
-if (
+    if (
       view.screen === "menu" ||
       view.screen === "list" ||
       view.screen === "masterBiaya" ||
@@ -1245,12 +1240,12 @@ if (
       view.screen === "hargaLayananList" ||
       view.screen === "biayaTetapList"
     ) {
-      setFooterVisible(false);
+      bar.style.display = "none";
       return;
     }
 
     if (view.screen === "ringkasan") {
-      setFooterVisible(true);
+      bar.style.display = "flex";
       var delBtn = document.createElement("button");
       delBtn.className = "btn-danger";
       delBtn.setAttribute("aria-label", "Hapus cabang");
@@ -1269,7 +1264,7 @@ if (
     }
 
     if (view.screen === "form") {
-      setFooterVisible(true);
+      bar.style.display = "flex";
       var cancelBtn = document.createElement("button");
       cancelBtn.className = "btn-secondary";
       cancelBtn.textContent = "Batal";
@@ -1290,7 +1285,7 @@ if (
     }
 
     if (view.screen === "gasForm") {
-      setFooterVisible(true);
+      bar.style.display = "flex";
 
       var gasCancelBtn = document.createElement("button");
       gasCancelBtn.className = "btn-secondary";
@@ -1309,7 +1304,7 @@ if (
     }
 
     if (view.screen === "listrikForm") {
-      setFooterVisible(true);
+      bar.style.display = "flex";
 
       var listrikCancelBtn = document.createElement("button");
       listrikCancelBtn.className = "btn-secondary";
@@ -1331,7 +1326,7 @@ if (
     }
 
     if (view.screen === "airForm") {
-      setFooterVisible(true);
+      bar.style.display = "flex";
 
       var airCancelBtn = document.createElement("button");
       airCancelBtn.className = "btn-secondary";
@@ -1353,7 +1348,7 @@ if (
     }
 
     if (view.screen === "notaKasirForm") {
-      setFooterVisible(true);
+      bar.style.display = "flex";
 
       var notaCancelBtn = document.createElement("button");
       notaCancelBtn.className = "btn-secondary";
@@ -1375,7 +1370,7 @@ if (
     }
 
     if (view.screen === "hargaLayananDetail") {
-      setFooterVisible(true);
+      bar.style.display = "flex";
 
       var hargaResetBtn = document.createElement("button");
       hargaResetBtn.className = "btn-danger";
@@ -1401,7 +1396,7 @@ if (
     }
 
     if (view.screen === "biayaTetapForm") {
-      setFooterVisible(true);
+      bar.style.display = "flex";
 
       var fixedDeleteBtn = document.createElement("button");
       fixedDeleteBtn.className = "btn-danger";
@@ -1877,7 +1872,7 @@ if (
 
   /**
    * ===========================================================================
-   * SECTION: MASTER BIAYA Ã¢â‚¬â€ GAS LPG
+   * SECTION: MASTER BIAYA â€” GAS LPG
    * ===========================================================================
    * Semua fungsi di bawah ini diberi prefix "gas"/"Gas" secara konsisten,
    * supaya kalau nanti dipecah ke file Index lain (mis. MasterBiaya.html
@@ -1889,7 +1884,7 @@ if (
   /**
    * selectKategoriBiaya: dipanggil saat user klik pill kategori di
    * screenMasterBiaya. Hanya menukar view.kategoriBiayaAktif dan re-render
-   * tampilan pill aktif Ã¢â‚¬â€ TIDAK perlu reload daftar cabang, karena daftar
+   * tampilan pill aktif â€” TIDAK perlu reload daftar cabang, karena daftar
    * cabang sama untuk semua kategori, hanya tujuan navigasinya yang beda
    * (lihat renderBiayaPickCabangList -> openGasList vs openListrikForm).
    */
@@ -1952,7 +1947,7 @@ if (
    * openGasList: masuk ke daftar kartu "Analisa Biaya Gas" untuk satu cabang.
    * Memanggil listBiayaGas(cabangId) yang mengembalikan SEKALIGUS profil
    * cabang ringkas (untuk judul + dropdown dryer) dan seluruh record gas
-   * dengan summary masing-masing Ã¢â‚¬â€ jadi cukup satu roundtrip.
+   * dengan summary masing-masing â€” jadi cukup satu roundtrip.
    */
   function openGasList(cabangId) {
     view.gasCabangId = cabangId;
@@ -1972,7 +1967,7 @@ if (
         }
         gasCabangCache = res.data.cabang;
         gasItemsCache = res.data.items;
-        document.getElementById("gasListTitle").textContent = "Analisa Biaya Gas Ã‚Â· " + (gasCabangCache.namaLaundry || "(Tanpa nama)");
+        document.getElementById("gasListTitle").textContent = "Analisa Biaya Gas Â· " + (gasCabangCache.namaLaundry || "(Tanpa nama)");
         renderGasList();
       })
       .withFailureHandler(function (err) {
@@ -2262,7 +2257,7 @@ function selectGasCustom() {
     dryers.forEach(function (m, idx) {
       var opt = document.createElement("option");
       opt.value = m.id;
-      opt.textContent = "Unit #" + (idx + 1) + " Ã‚Â· " + machineDisplayName(m);
+      opt.textContent = "Unit #" + (idx + 1) + " Â· " + machineDisplayName(m);
       if (m.id === gasFormState.dryerRefId) opt.selected = true;
       select.appendChild(opt);
     });
@@ -2335,7 +2330,7 @@ function selectGasCustom() {
 
   function saveGasForm() {
     // Validasi ringan di sisi klien dulu (UX cepat), validasi penuh & otoritatif
-    // tetap di backend (validateBiayaGas_) Ã¢â‚¬â€ lihat catatan arsitektur Code.gs.
+    // tetap di backend (validateBiayaGas_) â€” lihat catatan arsitektur Code.gs.
     var isCustom = !BIAYA_GAS_PRESET.some(function (p) { return p.label === gasFormState.kapasitasLabel; });
     if (isCustom) {
       var customKg = Number(document.getElementById("gasKapasitasCustomKg").value) || 0;
@@ -2388,7 +2383,7 @@ function selectGasCustom() {
 
   /**
    * ===========================================================================
-   * SECTION: MASTER BIAYA Ã¢â‚¬â€ LISTRIK
+   * SECTION: MASTER BIAYA â€” LISTRIK
    * ===========================================================================
    * Semua fungsi di bawah ini diberi prefix "listrik"/"Listrik" secara
    * konsisten, mengikuti pola prefix "gas"/"Gas" di section sebelumnya.
@@ -2404,7 +2399,7 @@ function selectGasCustom() {
 
   function listrikMachineLabel(m, index) {
     var jenis = JENIS_MESIN_LABEL_CLIENT[m.jenis] || "Mesin";
-    return "Unit #" + (index + 1) + " Ã‚Â· " + jenis + " Ã‚Â· " + (m.durasiMenit || 0) + " mnt";
+    return "Unit #" + (index + 1) + " Â· " + jenis + " Â· " + (m.durasiMenit || 0) + " mnt";
   }
 
   /**
@@ -2455,7 +2450,7 @@ function selectGasCustom() {
   /**
    * openListrikForm: masuk ke layar konfigurasi listrik untuk satu cabang.
    * getBiayaListrik(cabangId) mengembalikan default (TDL 1700, watt 0) jika
-   * cabang belum pernah mengisi Ã¢â‚¬â€ BUKAN error Ã¢â‚¬â€ sehingga layar tetap mulus
+   * cabang belum pernah mengisi â€” BUKAN error â€” sehingga layar tetap mulus
    * dibuka pertama kali.
    */
   function openListrikForm(cabangId) {
@@ -2474,7 +2469,7 @@ function selectGasCustom() {
         }
         listrikCabangCache = res.data.cabang;
         listrikFormState = res.data.record;
-        document.getElementById("listrikTitle").textContent = "Analisa Biaya Listrik Ã‚Â· " + (listrikCabangCache.namaLaundry || "(Tanpa nama)");
+        document.getElementById("listrikTitle").textContent = "Analisa Biaya Listrik Â· " + (listrikCabangCache.namaLaundry || "(Tanpa nama)");
         renderListrikForm();
         setSaveStatus("", "");
       })
@@ -2563,9 +2558,9 @@ function selectGasCustom() {
 
     var hintEl = document.getElementById("listrikPompaHint");
     if (summary.totalUnitMesinCuci > 0) {
-      hintEl.textContent = "Dialokasikan rata ke " + summary.totalUnitMesinCuci + " unit mesin cuci di profil cabang ini (Ã¢â€°Ë† " + formatNum(summary.wattPompaPerMesinCuci) + " W / mesin).";
+      hintEl.textContent = "Dialokasikan rata ke " + summary.totalUnitMesinCuci + " unit mesin cuci di profil cabang ini (â‰ˆ " + formatNum(summary.wattPompaPerMesinCuci) + " W / mesin).";
     } else {
-      hintEl.textContent = "Belum ada mesin cuci di profil cabang ini Ã¢â‚¬â€ beban pompa belum bisa dialokasikan.";
+      hintEl.textContent = "Belum ada mesin cuci di profil cabang ini â€” beban pompa belum bisa dialokasikan.";
     }
   }
 
@@ -2600,7 +2595,7 @@ function selectGasCustom() {
 
   /**
    * Input hanya memperbarui listrikFormState di memori + pratinjau real-time.
-   * TIDAK mengirim apapun ke server di sini Ã¢â‚¬â€ pengiriman hanya terjadi saat
+   * TIDAK mengirim apapun ke server di sini â€” pengiriman hanya terjadi saat
    * tombol "Simpan perubahan" diklik (saveListrikFormManual).
    */
   function bindListrikFormInputs() {
@@ -2642,7 +2637,7 @@ function selectGasCustom() {
         }
         airCabangCache = res.data.cabang;
         airFormState = res.data.record;
-        document.getElementById("airTitle").textContent = "Analisa Biaya Air Ã‚Â· " + (airCabangCache.namaLaundry || "(Tanpa nama)");
+        document.getElementById("airTitle").textContent = "Analisa Biaya Air Â· " + (airCabangCache.namaLaundry || "(Tanpa nama)");
         renderAirForm();
         setSaveStatus("", "");
       })
@@ -2662,7 +2657,7 @@ function selectGasCustom() {
 
     showScreen("notaKasirForm");
     document.getElementById("notaKasirTitle").textContent =
-      "Admin/Nota Kasir" + (notaKasirCabangCache.namaLaundry ? " Ã‚Â· " + notaKasirCabangCache.namaLaundry : "");
+      "Admin/Nota Kasir" + (notaKasirCabangCache.namaLaundry ? " Â· " + notaKasirCabangCache.namaLaundry : "");
     renderNotaKasirForm();
     setSaveStatus("", "");
 
@@ -2676,7 +2671,7 @@ function selectGasCustom() {
         notaKasirCabangCache = res.data.cabang || notaKasirCabangCache;
         notaKasirFormState = res.data.record || notaKasirFormState;
         document.getElementById("notaKasirTitle").textContent =
-          "Admin/Nota Kasir" + (notaKasirCabangCache.namaLaundry ? " Ã‚Â· " + notaKasirCabangCache.namaLaundry : "");
+          "Admin/Nota Kasir" + (notaKasirCabangCache.namaLaundry ? " Â· " + notaKasirCabangCache.namaLaundry : "");
         renderNotaKasirForm();
         setSaveStatus("", "");
       })
@@ -3001,7 +2996,7 @@ function selectGasCustom() {
     if (airFormState.sumberAir === "pdam") {
       container.innerHTML = `
         <div class="field">
-          <label for="airPdamHarga">Harga air per mÃ‚Â³ (Rp)</label>
+          <label for="airPdamHarga">Harga air per mÂ³ (Rp)</label>
           <input type="number" inputmode="decimal" min="0" step="0.01" id="airPdamHarga" placeholder="Contoh: 3000">
           <div class="field-hint">Sesuaikan dengan tarif PDAM area laundry Anda.</div>
         </div>
@@ -3625,7 +3620,7 @@ window.saveAirForm = saveAirForm;
   function createBiayaTetapDepresiasiRowHtml(row) {
     return '' +
       '<div class="fc-dynamic-row fc-dep-row" data-key="' + escapeJsAttr(row.key || "") + '" data-group="' + escapeJsAttr(row.group || "") + '" data-machine-ref-id="' + escapeJsAttr(row.machineRefId || "") + '" data-nama-mesin="' + escapeJsAttr(row.namaMesin || "") + '" data-jenis-mesin="' + escapeJsAttr(row.jenisMesin || "") + '" data-jumlah-unit="' + Number(row.jumlahUnit || 0) + '">' +
-        '<div class="fc-row-top"><div><div class="fc-row-title">' + escapeHtml(row.namaMesin || "Mesin") + '</div><div class="fc-row-subtitle">Tipe: ' + escapeHtml(row.jenisMesin || "-") + ' Ã‚Â· Unit: ' + Number(row.jumlahUnit || 0) + '</div></div></div>' +
+        '<div class="fc-row-top"><div><div class="fc-row-title">' + escapeHtml(row.namaMesin || "Mesin") + '</div><div class="fc-row-subtitle">Tipe: ' + escapeHtml(row.jenisMesin || "-") + ' Â· Unit: ' + Number(row.jumlahUnit || 0) + '</div></div></div>' +
         '<div class="fc-input-grid three">' +
           '<div class="field"><label>Harga beli / unit</label><input type="number" class="fc-dep-harga" min="0" step="1" value="' + Number(row.hargaBeliPerUnit || 0) + '" oninput="refreshBiayaTetapPreview()"></div>' +
           '<div class="field"><label>Nilai residu / unit</label><input type="number" class="fc-dep-residu" min="0" step="1" value="' + Number(row.nilaiResiduPerUnit || 0) + '" oninput="refreshBiayaTetapPreview()"></div>' +
@@ -4012,7 +4007,7 @@ window.saveAirForm = saveAirForm;
     var breakdownHtml = layanan.map(function (item) {
       var harga = Number(item.hargaJual || 0);
       var margin = Number(item.margin || 0);
-      var label = harga > 0 ? money0(harga) + ' Ã‚Â· Margin ' + money0(margin) + ' Ã‚Â· % Margin ' + formatNum(Number(item.marginPercent || 0)) + '%' : 'Belum diisi';
+      var label = harga > 0 ? money0(harga) + ' Â· Margin ' + money0(margin) + ' Â· % Margin ' + formatNum(Number(item.marginPercent || 0)) + '%' : 'Belum diisi';
       return '<div class="fc-list-breakdown-row"><span class="k">' + escapeHtml(item.title || '-') + '</span><span class="v">' + escapeHtml(label) + '</span></div>';
     }).join("");
 

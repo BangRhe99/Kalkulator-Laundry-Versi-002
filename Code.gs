@@ -1,18 +1,18 @@
-﻿/**
+/**
  * ============================================================================
- * KALKULATOR LAUNDRY Ã¢â‚¬â€ DATA OPERASIONAL (multi-cabang)
- * Code.gs Ã¢â‚¬â€ ENTRY POINT & KONSTANTA SKEMA GLOBAL Ã¢â‚¬â€ Schema v4
+ * KALKULATOR LAUNDRY â€” DATA OPERASIONAL (multi-cabang)
+ * Code.gs â€” ENTRY POINT & KONSTANTA SKEMA GLOBAL â€” Schema v4
  * ============================================================================
  *
  * FILE INI SENGAJA DIBUAT SANGAT RINGKAS. Tugasnya hanya dua:
- *   1. doGet() Ã¢â‚¬â€ satu-satunya pintu masuk web app, merender Index.html.
+ *   1. doGet() â€” satu-satunya pintu masuk web app, merender Index.html.
  *   2. Konstanta skema (SCHEMA_VERSION, DATA_SHEET_NAME, KEY_xxx) yang
  *      dipakai SEMUA file lain di project ini.
  * Semua logika fitur (CRUD, kalkulasi, validasi) ada di file Modul_*.gs.
  * Semua logika upgrade versi data ada di Migrasi_Skema.gs.
  *
  * ===========================================================================
- * PETA PROJECT Ã¢â‚¬â€ baca ini dulu sebelum mencari/menambah apapun:
+ * PETA PROJECT â€” baca ini dulu sebelum mencari/menambah apapun:
  *
  *   Code.gs                 (file ini) entry point + konstanta skema
  *   Util_Umum.gs            helper murni: sanitasi angka/string, id, rounding,
@@ -63,10 +63,10 @@
  *     WAJIB memanggil fungsi compute yang sama, JANGAN duplikasi rumus.
  *
  * RIWAYAT SKEMA (detail lengkap tiap versi ada di Migrasi_Skema.gs):
- *   v1 Ã¢â‚¬â€ satu set data operasional per Sheet (tidak ada konsep "cabang").
- *   v2 Ã¢â‚¬â€ multi-cabang, satuan kapasitas LOAD (bukan kg).
- *   v3 Ã¢â‚¬â€ Master Biaya: Gas LPG.
- *   v4 Ã¢â‚¬â€ Master Biaya: Listrik.
+ *   v1 â€” satu set data operasional per Sheet (tidak ada konsep "cabang").
+ *   v2 â€” multi-cabang, satuan kapasitas LOAD (bukan kg).
+ *   v3 â€” Master Biaya: Gas LPG.
+ *   v4 â€” Master Biaya: Listrik.
  *
  * CATATAN TEKNIS Apps Script (penting dipahami sebelum menambah file baru):
  *   Semua file .gs dalam project ini berbagi SATU global scope yang sama.
@@ -98,7 +98,7 @@ function doGet(e) {
     .setTitle("Kalkulator Laundry")
     .addMetaTag(
       "viewport",
-      "width=device-width, initial-scale=1.0, viewport-fit=cover"
+      "width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover"
     )
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
